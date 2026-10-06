@@ -1,0 +1,3 @@
+@echo off
+echo Dang mo PowerShell voi quyen Administrator...
+powershell -Command "Start-Process powershell -Verb RunAs -ArgumentList '-ExecutionPolicy Bypass -File \"%~dp0setup-sql-server.ps1\"'"
