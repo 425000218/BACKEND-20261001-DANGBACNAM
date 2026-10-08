@@ -1,107 +1,168 @@
-# BÁO CÁO THỰC HÀNH CHƯƠNG 2
-## XÂY DỰNG BACKEND BẰNG VIBE CODING VÀ KIỂM THỬ VỚI POSTMAN
+# BÁO CÁO THỰC HÀNH CHƯƠNG 3 (BUỔI 4)
+## KẾT NỐI SQL SERVER & SEQUELIZE ORM (TYPESCRIPT ESM)
 
 * **Học phần**: Lập trình Backend
-* **Dự án**: Quản lý sinh viên với Node.js, Express 5 và TypeScript
-* **Môi trường**: Windows, Node.js v24, pnpm v10, tsx, Postman
+* **Dự án**: Quản lý sinh viên với Node.js, Express 5, TypeScript và Sequelize ORM (v6)
+* **Cơ sở dữ liệu**: Microsoft SQL Server (Database: `QuanLySinhVienDB`, User: `sv_app`)
+* **Môi trường**: Windows, Node.js v22/v24, pnpm v10, tsx, Postman v2.1
 
 ---
 
-## 1. Cấu trúc thư mục dự án
+## 1. Cấu trúc thư mục dự án nâng cấp
 
 ```text
 backend-quan-ly-sinh-vien/
-├── package.json                                    # Cấu hình dự án, scripts, dependencies
+├── package.json                                    # Cấu hình dự án, scripts: dev, build, start, check:db, check:relation
 ├── pnpm-lock.yaml                                  # Khóa phiên bản gói cài đặt
 ├── tsconfig.json                                   # Cấu hình TypeScript (ESM, NodeNext)
-├── .env                                            # Cấu hình biến môi trường (PORT=5000)
-├── .env.example                                    # Mẫu biến môi trường chia sẻ
+├── .env                                            # Biến môi trường local (PORT, DB_HOST, DB_USER, DB_PASSWORD, ...)
+├── .env.example                                    # Mẫu biến môi trường an toàn (chứa placeholder)
 ├── .gitignore                                      # Loại trừ node_modules, dist, .env
-├── Backend_Sinh_Vien_Chuong_2.postman_collection.json # File xuất Collection Postman v2.1
-├── src/
-│   ├── server.ts                                   # Điểm khởi động server, gắn middleware và router
-│   ├── dtos/
-│   │   └── sinhVien.dto.ts                         # Định nghĩa kiểu dữ liệu ISinhVienDTO
-│   ├── services/
-│   │   └── sinhVien.service.ts                     # Tầng nghiệp vụ, validation và lưu trữ mảng
-│   ├── controllers/
-│   │   └── sinhVien.controller.ts                  # Tiếp nhận HTTP request, gọi Service và trả JSON
-│   ├── routes/
-│   │   └── sinhVien.routes.ts                      # Định tuyến URL tới Controller tương ứng
-│   ├── middlewares/
-│   │   ├── logger.middleware.ts                    # Ghi log request (method, URL)
-│   │   └── error.middleware.ts                     # Bắt lỗi toàn cục, chuẩn hóa phản hồi lỗi
-│   └── utils/
-│       └── AppError.ts                             # Lớp định nghĩa lỗi nghiệp vụ kèm statusCode
+├── README.md                                       # Hướng dẫn chi tiết cài đặt và khởi chạy dự án
+├── Backend_Sinh_Vien_Buoi_4_SQL_Server.postman_collection.json # File xuất Postman Collection kiểm thử
+├── sql/
+│   ├── 01-quan-ly-sinh-vien.sql                    # Script DDL tạo Database QuanLySinhVienDB và bảng dbo.SinhVien
+│   ├── 02-seed.sql                                 # Script khởi tạo dữ liệu mẫu SV001, SV002
+│   ├── 03-app-login.sql                            # Script tạo Login/User sv_app & cấp quyền tối thiểu (SELECT, INSERT)
+│   └── 04-lop-va-quan-he.sql                       # Script mở rộng bảng dbo.Lop, quan hệ 1-N và Foreign Key
+└── src/
+    ├── server.ts                                   # Điểm khởi động server, authenticate CSDL trước khi mở HTTP
+    ├── config/
+    │   └── database.ts                             # Cấu hình kết nối Sequelize 6 với SQL Server qua Tedious
+    ├── models/
+    │   ├── SinhVien.ts                             # Model ánh xạ bảng dbo.SinhVien
+    │   ├── Lop.ts                                  # Model ánh xạ bảng dbo.Lop
+    │   └── index.ts                                # Thiết lập quan hệ 1-N (Lop.hasMany, SinhVien.belongsTo)
+    ├── dtos/
+    │   └── sinhVien.dto.ts                         # Interface ISinhVienDTO (4 trường: maSV, hoTen, email, maLop)
+    ├── services/
+    │   └── sinhVien.service.ts                     # Xử lý nghiệp vụ, validation dữ liệu, gọi Model truy vấn CSDL
+    ├── controllers/
+    │   └── sinhVien.controller.ts                  # Controller async/await tiếp nhận request và trả về JSON chuẩn
+    ├── routes/
+    │   └── sinhVien.routes.ts                      # Khai báo tuyến đường API (/api/v1/sinh-vien)
+    ├── middlewares/
+    │   ├── logger.middleware.ts                    # Ghi log request (method, url)
+    │   └── error.middleware.ts                     # Bắt lỗi toàn cục, chuẩn hóa phản hồi lỗi (AppError, JSON hỏng, 500)
+    ├── scripts/
+    │   ├── check-db.ts                             # Script kiểm tra kết nối độc lập tới CSDL
+    │   └── check-relation.ts                       # Script kiểm tra truy vấn quan hệ 1-N qua Sequelize Include
+    └── utils/
+        └── AppError.ts                             # Lớp định nghĩa lỗi nghiệp vụ chuẩn hóa mã HTTP
 ```
 
 ---
 
-## 2. Bảng kết quả kiểm thử (Test Cases T01 - T11)
+## 2. Thiết kế Cơ sở dữ liệu & Phân quyền ứng dụng
 
-| ID | Điều kiện & Request | Body gửi lên | Status kỳ vọng | Status thực tế | Kết quả | Body phản hồi thực tế |
+### 2.1. Bảng `dbo.SinhVien`
+* `maSV`: `VARCHAR(5)`, **PRIMARY KEY**, `NOT NULL` — Định danh duy nhất theo định dạng chuỗi (`SV001`), không dùng `id` số tự tăng nhằm giữ tính tương thích với DTO từ chương trước.
+* `hoTen`: `NVARCHAR(150)`, `NOT NULL` — Lưu họ tên tiếng Việt có dấu.
+* `email`: `NVARCHAR(254)`, `NOT NULL` — Lưu email chuẩn RFC.
+* `maLop`: `NVARCHAR(50)`, `NOT NULL` — Lưu mã lớp học (khóa ngoại tham chiếu `dbo.Lop(maLop)`).
+
+### 2.2. Bảng `dbo.Lop` (Mở rộng quan hệ 1-N)
+* `maLop`: `NVARCHAR(50)`, **PRIMARY KEY**, `NOT NULL` — Mã lớp (ví dụ: `25CT114`).
+* `tenLop`: `NVARCHAR(150)`, `NOT NULL` — Tên lớp học chi tiết.
+* **Ràng buộc toàn vẹn**: `FK_SinhVien_Lop` (`SinhVien.maLop` tham chiếu `Lop.maLop`). Không sử dụng `CASCADE DELETE` để đảm bảo an toàn dữ liệu sinh viên.
+
+### 2.3. Nguyên tắc cấp quyền tối thiểu (Least Privilege) cho `sv_app`
+* Tài khoản ứng dụng `sv_app` chỉ được cấp quyền `SELECT` và `INSERT` trên bảng `dbo.SinhVien`, và `SELECT` trên bảng `dbo.Lop`.
+* Tuyệt đối không cấp quyền `sysadmin`, `db_owner`, `UPDATE` hay `DELETE` trong phạm vi bài chính, giúp hạn chế tối đa rủi ro bảo mật CSDL.
+
+---
+
+## 3. Bảng kết quả kiểm thử (Test Cases T01 - T12)
+
+| ID | Điều kiện & Request | Body gửi lên | Status kỳ vọng | Status thực tế | Kết quả | Body phản hồi thực tế / Ghi chú |
 |---|---|---|---|---|---|---|
 | **T01** | `GET http://localhost:5000/` | Không | 200 | 200 | **PASS** | `{"success":true,"message":"Backend quản lý sinh viên đang hoạt động"}` |
 | **T02** | `GET http://localhost:5000/api/v1/sinh-vien` | Không | 200 | 200 | **PASS** | `{"success":true,"message":"Lấy danh sách sinh viên thành công","data":[{"maSV":"SV001","hoTen":"Minh Nhật","email":"minhnhat@example.com","maLop":"25CT114"},{"maSV":"SV002","hoTen":"Lan Anh","email":"lananh@example.com","maLop":"25CT114"}]}` |
 | **T03** | `GET http://localhost:5000/api/v1/sinh-vien/SV001` | Không | 200 | 200 | **PASS** | `{"success":true,"message":"Tìm sinh viên thành công","data":{"maSV":"SV001","hoTen":"Minh Nhật","email":"minhnhat@example.com","maLop":"25CT114"}}` |
 | **T04** | `GET http://localhost:5000/api/v1/sinh-vien/SV999` | Không | 404 | 404 | **PASS** | `{"success":false,"message":"Không tìm thấy sinh viên"}` |
-| **T05** | `POST http://localhost:5000/api/v1/sinh-vien` (Thêm SV003 lần đầu) | `{"maSV":"SV003","hoTen":"Ngọc Mai","email":"ngocmai@example.com","maLop":"25CT114"}` | 201 | 201 | **PASS** | `{"success":true,"message":"Thêm sinh viên thành công","data":{"maSV":"SV003","hoTen":"Ngọc Mai","email":"ngocmai@example.com","maLop":"25CT114"}}` |
-| **T06** | `POST http://localhost:5000/api/v1/sinh-vien` (Thêm lại SV003, chưa restart) | `{"maSV":"SV003","hoTen":"Ngọc Mai","email":"ngocmai@example.com","maLop":"25CT114"}` | 409 | 409 | **PASS** | `{"success":false,"message":"Mã sinh viên đã tồn tại"}` |
-| **T07** | `POST http://localhost:5000/api/v1/sinh-vien` (Thiếu hoTen với mã mới) | `{"maSV":"SV004","email":"thunghiem@example.com","maLop":"25CT114"}` | 400 | 400 | **PASS** | `{"success":false,"message":"Cần cung cấp đủ 4 trường maSV, hoTen, email, maLop có kiểu chuỗi (string)"}` |
-| **T08** | `POST http://localhost:5000/api/v1/sinh-vien` (Email sai với mã mới) | `{"maSV":"SV004","hoTen":"Test","email":"khong-phai-email","maLop":"25CT114"}` | 400 | 400 | **PASS** | `{"success":false,"message":"Email không đúng định dạng"}` |
-| **T09** | `POST http://localhost:5000/api/v1/sinh-vien` (Mã kiểu number) | `{"maSV":4,"hoTen":"Test","email":"valid@test.com","maLop":"25CT114"}` | 400 | 400 | **PASS** | `{"success":false,"message":"Cần cung cấp đủ 4 trường maSV, hoTen, email, maLop có kiểu chuỗi (string)"}` |
-| **T10** | `POST http://localhost:5000/api/v1/sinh-vien` (JSON hỏng cú pháp) | `{"maSV":"SV004"` | 400 | 400 | **PASS** | `{"success":false,"message":"Dữ liệu JSON gửi lên không đúng cú pháp"}` |
-| **T11** | `GET http://localhost:5000/khong-co` (Đường dẫn không tồn tại) | Không | 404 | 404 | **PASS** | `{"success":false,"message":"Không tìm thấy đường dẫn"}` |
+| **T05** | `POST http://localhost:5000/api/v1/sinh-vien` (Thêm SV003 hợp lệ) | `{"maSV":"SV003","hoTen":"Ngọc Mai","email":"ngocmai@example.com","maLop":"25CT114"}` | 201 | 201 | **PASS** | `{"success":true,"message":"Thêm sinh viên thành công","data":{"maSV":"SV003","hoTen":"Ngọc Mai","email":"ngocmai@example.com","maLop":"25CT114"}}` |
+| **T05.1** | `GET http://localhost:5000/api/v1/sinh-vien/SV003` *(Sau khi tắt & khởi động lại Server)* | Không | 200 | 200 | **PASS** | `{"success":true,"data":{"maSV":"SV003","hoTen":"Ngọc Mai",...}}` **(Chứng minh dữ liệu lưu bền vững trong SQL Server, không bị mất khi restart)** |
+| **T06** | `POST http://localhost:5000/api/v1/sinh-vien` (Gửi lại SV003 trùng mã) | `{"maSV":"SV003","hoTen":"Ngọc Mai","email":"ngocmai@example.com","maLop":"25CT114"}` | 409 | 409 | **PASS** | `{"success":false,"message":"Mã sinh viên đã tồn tại"}` (Bảo vệ bởi PK SQL Server) |
+| **T07** | `POST http://localhost:5000/api/v1/sinh-vien` (Thiếu họ tên / tên rỗng) | `{"maSV":"SV004","email":"test@example.com","maLop":"25CT114"}` | 400 | 400 | **PASS** | `{"success":false,"message":"Cần cung cấp đủ 4 trường maSV, hoTen, email, maLop có kiểu chuỗi (string)"}` |
+| **T08** | `POST http://localhost:5000/api/v1/sinh-vien` (Mã SV sai regex `ABC004`) | `{"maSV":"ABC004","hoTen":"Test","email":"test@test.com","maLop":"25CT114"}` | 400 | 400 | **PASS** | `{"success":false,"message":"Mã sinh viên không đúng định dạng..."}` |
+| **T09** | `POST http://localhost:5000/api/v1/sinh-vien` (Email sai cú pháp) | `{"maSV":"SV004","hoTen":"Test","email":"khong-phai-email","maLop":"25CT114"}` | 400 | 400 | **PASS** | `{"success":false,"message":"Email không đúng định dạng"}` |
+| **T10** | `POST http://localhost:5000/api/v1/sinh-vien` (Họ tên dài > 150 ký tự) | `{"maSV":"SV004","hoTen":"[151 ký tự]","email":"v@test.com","maLop":"25CT114"}` | 400 | 400 | **PASS** | `{"success":false,"message":"Họ tên không được vượt quá 150 ký tự"}` |
+| **T11** | `POST http://localhost:5000/api/v1/sinh-vien` (JSON hỏng cú pháp) | `{"maSV":"SV004"` | 400 | 400 | **PASS** | `{"success":false,"message":"Dữ liệu JSON gửi lên không đúng cú pháp"}` |
+| **T12** | `POST http://localhost:5000/api/v1/sinh-vien` (Mã lớp không tồn tại trong bảng Lop) | `{"maSV":"SV004","hoTen":"Test","email":"v@test.com","maLop":"LOP_KHONG_TON_TAI"}` | 400 | 400 | **PASS** | `{"success":false,"message":"Mã lớp không tồn tại"}` (Bảo vệ bởi quan hệ Khóa ngoại FK) |
 
 ---
 
-## 3. Nhật ký Prompt (Vibe Coding Log)
+## 4. Bằng chứng kiểm tra độc lập (CLI Commands)
 
-### Prompt 1: Thiết lập và tạo chức năng thêm sinh viên có validation
+### 4.1. Kiểm tra kết nối CSDL (`pnpm check:db`)
 ```text
-ROLE: Hướng dẫn viên Backend NodeJS & TypeScript.
-CONTEXT: Dự án quản lý sinh viên sử dụng Express 5, TypeScript ESM NodeNext, lưu trữ in-memory.
-TASK: Xây dựng chức năng thêm sinh viên POST /api/v1/sinh-vien và tầng xử lý lỗi AppError.
-CONSTRAINT:
-- Tạo src/utils/AppError.ts kế thừa Error, nhận statusCode: number và message.
-- Service validate chặt chẽ: input phải là object (không null/array); 4 trường bắt buộc kiểu string; trim khoảng trắng; maSV chuẩn regex /^SV[0-9]{3}$/; hoTen và maLop không rỗng; email đúng regex /^[^\s@]+@[^\s@]+\.[^\s@]+$/; kiểm tra trùng mã sau validation (trả 409).
-- Phản hồi thành công HTTP 201; phản hồi lỗi HTTP 400/409/500 theo chuẩn { success: false, message: ... }.
-OUTPUT: Viết code hoàn chỉnh cho AppError.ts, sinhVien.service.ts, sinhVien.controller.ts, sinhVien.routes.ts, error.middleware.ts, server.ts.
+> tsx src/scripts/check-db.ts
+Executing (default): SELECT 1+1 AS result
+DB connected: QuanLySinhVienDB
 ```
 
-### Prompt 2: Xử lý và kiểm soát ngoại lệ (Prompt sửa lỗi)
+### 4.2. Kiểm tra quan hệ 1-N Lớp & Sinh viên (`pnpm check:relation`)
 ```text
-ROLE: Chuyên gia Debug Backend Node.js.
-CONTEXT: Khi người dùng gửi body JSON bị lỗi cú pháp (ví dụ thiếu dấu đóng ngoặc), Express mặc định trả về lỗi HTML 500 hoặc ngắt kết nối.
-TASK: Bổ sung khả năng bắt lỗi cú pháp JSON của middleware express.json() trong error.middleware.ts để trả về JSON chuẩn HTTP 400 thay vì để lộ lỗi hệ thống.
-CONSTRAINT: Giữ nguyên cấu trúc ESM NodeNext, kiểu ErrorRequestHandler 4 tham số.
+> tsx src/scripts/check-relation.ts
+--- KẾT NỐI CSDL THÀNH CÔNG ---
+
+=== 1. DANH SÁCH SINH VIÊN KÈM THÔNG TIN LỚP (SinhVien -> Lop) ===
+[SV001] Minh Nhật - Email: minhnhat@example.com | Lớp: 25CT114 - Lớp Công Nghệ Thông Tin K114
+[SV002] Lan Anh - Email: lananh@example.com | Lớp: 25CT114 - Lớp Công Nghệ Thông Tin K114
+
+=== 2. DANH SÁCH LỚP VÀ CÁC SINH VIÊN THUỘC LỚP (Lop -> SinhViens) ===
+Lớp: [25CT114] Lớp Công Nghệ Thông Tin K114
+Số lượng sinh viên: 2
+  - SV001: Minh Nhật (minhnhat@example.com)
+  - SV002: Lan Anh (lananh@example.com)
+
+--- KIỂM TRA QUAN HỆ 1-N HOÀN TẤT THÀNH CÔNG ---
 ```
 
 ---
 
-## 4. Giải đáp các câu hỏi tự kiểm tra trước khi nộp bài
+## 5. Nhật ký Prompt (Vibe Coding Log)
 
-### 1. Route, Controller và Service của chức năng lấy danh sách ở đâu?
-* **Route**: Nằm tại `src/routes/sinhVien.routes.ts` với dòng `router.get('/', getDanhSachSinhVien);` (được mount tại prefix `/api/v1/sinh-vien` trong `src/server.ts`).
-* **Controller**: Nằm tại `src/controllers/sinhVien.controller.ts` trong hàm `getDanhSachSinhVien()`, có nhiệm vụ đón request, gọi service lấy dữ liệu và trả response dạng JSON với status code 200.
-* **Service**: Nằm tại `src/services/sinhVien.service.ts` trong hàm `layDanhSachSinhVien()`, quản lý dữ liệu mảng sinh viên và trả về danh sách đối tượng sinh viên.
+### Prompt 1: Tạo Database, bảng SinhVien và dữ liệu mẫu
+* **Mục tiêu**: Tạo các script SQL Server độc lập cho DDL và DML.
+* **Yêu cầu & Ràng buộc**: Tạo DB `QuanLySinhVienDB`, bảng `dbo.SinhVien` với `maSV` VARCHAR(5) là Khóa chính. Dùng lệnh `IF NOT EXISTS` và mệnh đề `GO` phân tách batch để script có thể chạy lại an toàn mà không làm mất dữ liệu cũ.
 
-### 2. Vì sao thêm sinh viên phải dùng POST có body?
-* Phương thức **POST** được thiết kế theo chuẩn HTTP để tạo mới tài nguyên trên server.
-* Thông tin sinh viên (gồm nhiều trường dữ liệu phức tạp: `maSV`, `hoTen`, `email`, `maLop`) cần được bảo mật và truyền tải cấu trúc nguyên vẹn bên trong phần thân (**body**) của request dưới dạng JSON thay vì đưa lên query string hay URL của phương thức GET (vốn bị giới hạn độ dài, lưu trong history trình duyệt và không an toàn).
+### Prompt 2: Tạo Login sv_app và phân quyền tối thiểu
+* **Mục tiêu**: Tạo tài khoản xác thực SQL Authentication chuyên dụng cho Backend.
+* **Yêu cầu & Ràng buộc**: Tạo Login `sv_app` trong `master`, User `sv_app` trong `QuanLySinhVienDB`. Chỉ `GRANT SELECT, INSERT` trên bảng `dbo.SinhVien`. Tuyệt đối không dùng `sa` hay gán quyền `db_owner`.
 
-### 3. Vì sao nhận 409 có thể là một test đạt?
-* Kiểm thử không chỉ kiểm tra trường hợp thành công (happy path - 200/201) mà còn phải kiểm tra hành vi ứng xử đúng của hệ thống khi phát sinh ngoại lệ (negative test).
-* Trong ca test `T06`, yêu cầu đề bài là: khi gửi trùng mã sinh viên đã tồn tại, hệ thống **bắt buộc phải từ chối** và trả về mã lỗi `409 Conflict`. Do đó, server trả về đúng `409` và thông báo lỗi hợp lệ nghĩa là chức năng chống trùng lặp hoạt động chính xác theo đặc tả.
+### Prompt 3: Cấu hình kết nối Sequelize 6 và Model SinhVien
+* **Mục tiêu**: Thiết lập file `src/config/database.ts` và model `src/models/SinhVien.ts`.
+* **Yêu cầu & Ràng buộc**: Sử dụng Sequelize 6 + TypeScript ESM NodeNext, driver `tedious`, đọc cấu hình từ `.env` an toàn. Khai báo model dùng từ khóa `declare` để tránh ghi đè getter/setter của Sequelize, thiết lập `timestamps: false` và `schema: 'dbo'`.
 
-### 4. Vì sao phải GET lại sau khi POST?
-* HTTP response `201 Created` chỉ phản ánh việc server thông báo đã tiếp nhận và thực hiện lệnh thêm.
-* Việc gửi tiếp request `GET /api/v1/sinh-vien` hoặc `GET /api/v1/sinh-vien/:maSV` đóng vai trò **xác minh thực tế** (verification), nhằm đảm bảo dữ liệu mới thực sự đã được lưu bền vững vào mảng/bộ nhớ và có thể truy xuất lại chính xác.
+### Prompt 4: Chuyển đổi Service & Controller sang bất đồng bộ (async/await)
+* **Mục tiêu**: Thay thế mảng RAM bằng các truy vấn Sequelize (`findAll`, `findByPk`, `create`).
+* **Yêu cầu & Ràng buộc**: Giữ nguyên tên hàm và chuẩn DTO 4 trường. Thêm kiểm tra độ dài chuỗi (`hoTen <= 150`, `email <= 254`, `maLop <= 50`). Controller phải `await` toàn bộ các hàm Service trước khi trả response JSON nhằm tránh gửi Promise rỗng về client.
 
-### 5. Vì sao restart server làm mất sinh viên vừa thêm?
-* Trong bài thực hành này, dữ liệu được lưu trữ tạm thời trong bộ nhớ RAM (`in-memory array` nằm trong module `sinhVien.service.ts`).
-* Khi dừng server (Ctrl+C) hoặc tiến trình Node.js khởi động lại, toàn bộ bộ nhớ của tiến trình bị giải phóng và mã nguồn được nạp lại từ đầu với mảng khởi tạo ban đầu (chỉ gồm 2 sinh viên mẫu `SV001` và `SV002`).
+### Prompt 5: Khởi động an toàn & Mở rộng quan hệ 1-N (Lop - SinhVien)
+* **Mục tiêu**: Sửa `src/server.ts` để `await sequelize.authenticate()` trước khi `app.listen()`, đồng thời bổ sung quan hệ 1-N với bảng `dbo.Lop`.
+* **Yêu cầu & Ràng buộc**: Kiểm tra `Lop.findByPk(maLop)` khi thêm sinh viên, xử lý `ForeignKeyConstraintError` thành mã lỗi `400` với thông báo `"Mã lớp không tồn tại"`. Cung cấp script `src/scripts/check-relation.ts` sử dụng `include` để kiểm tra quan hệ mà không làm thay đổi DTO API chính.
 
-### 6. Bạn đã thay đổi gì trong yêu cầu gửi AI, và đã chứng minh thay đổi đó hoạt động ra sao?
-* **Thay đổi yêu cầu**: Ban đầu nếu chỉ yêu cầu "thêm sinh viên", AI sẽ không tự kiểm tra regex định dạng mã (`SVxxx`), không kiểm tra email hợp lệ, không trim chuỗi, và không phân biệt mã trùng (`409`). Tôi đã bổ sung các ràng buộc (CONSTRAINT) chi tiết: định dạng `^SV[0-9]{3}$`, email regex, trim chuỗi, loại bỏ trường thừa ngoài DTO và cơ chế ném `AppError(409)`.
-* **Chứng minh hoạt động**: Chạy toàn bộ 11 ca kiểm thử tự động (T01 - T11). Tất cả các ca test gửi dữ liệu sai (T07 - thiếu tên, T08 - sai email, T09 - sai kiểu dữ liệu số, T10 - sai cú pháp JSON) đều bị chặn chính xác với mã 400; ca gửi trùng mã (T06) bị chặn với mã 409; và ca hợp lệ (T05) thêm thành công với mã 201 và truy xuất lại được qua GET.
+---
+
+## 6. Tự trả lời 5 câu hỏi cốt lõi
+
+### 1. DTO và Model khác nhau thế nào?
+* **DTO (Data Transfer Object)**: Là đối tượng định nghĩa cấu trúc dữ liệu dùng để **trao đổi giữa Client và Server qua giao thức HTTP**. DTO chỉ chứa dữ liệu thuần túy (plain object), không chứa logic nghiệp vụ hay logic truy vấn CSDL, giúp che giấu cấu trúc lưu trữ nội bộ và chỉ phơi bày những thông tin cần thiết.
+* **Model (Sequelize Model)**: Là đối tượng đại diện và **ánh xạ trực tiếp tới một bảng (Table) trong Cơ sở dữ liệu quan hệ**. Model chứa các thuộc tính ánh xạ cột, định kiểu SQL, các phương thức truy vấn (`findAll`, `create`, `findByPk`) và các quan hệ liên kết (Associations: `hasMany`, `belongsTo`).
+
+### 2. Vì sao Controller cần `await` sau khi đổi Service?
+* Khi chuyển từ mảng bộ nhớ RAM sang SQL Server, các thao tác đọc/ghi CSDL là các tác vụ I/O qua mạng nên các hàm Service trở thành **hàm bất đồng bộ (async)** và trả về một `Promise`.
+* Nếu Controller không dùng từ khóa `await`, hàm sẽ không chờ kết quả từ CSDL mà lập tức thực thi dòng lệnh gửi response JSON tiếp theo. Kết quả là dữ liệu gửi về Client sẽ là một đối tượng `Promise {}` chưa hoàn thành thay vì dữ liệu thật hoặc phát sinh lỗi xử lý sau khi response đã đóng.
+
+### 3. Vì sao restart server không dùng để reset test nữa?
+* Ở bài trước (Chương 2), dữ liệu nằm trong bộ nhớ RAM của tiến trình Node.js, nên mỗi khi tắt server (Ctrl+C) và bật lại, bộ nhớ RAM được khởi tạo lại từ đầu với mảng mẫu.
+* Ở bài này (Chương 3/Buổi 4), dữ liệu đã được **lưu trữ bền vững (Persistent Storage)** trong file dữ liệu của SQL Server trên ổ đĩa cứng. Khi Node.js tắt và bật lại, dữ liệu trong CSDL vẫn giữ nguyên vẹn. Do đó, muốn chạy lại kịch bản test từ đầu, cần dùng mã sinh viên mới hoặc dùng script SQL quản trị để dọn dẹp dữ liệu kiểm thử.
+
+### 4. Primary Key (PK) bảo vệ chống trùng mã thế nào?
+* Ở tầng ứng dụng, Service đã kiểm tra trước bằng `SinhVien.findByPk(maSV)` để trả về lỗi 409 nếu mã đã có.
+* Tuy nhiên, nếu có hai request gửi lên gần như đồng thời (Race Condition), cả hai có thể vượt qua bước kiểm tra của Service. Lúc này, **ràng buộc Khóa chính (PRIMARY KEY constraint)** tại tầng CSDL SQL Server sẽ chặn đứng hành động chèn bản ghi thứ hai và kích hoạt lỗi `UniqueConstraintError`. Khối `try/catch` trong Service sẽ bắt lỗi này và chuẩn hóa thành phản hồi `HTTP 409 Conflict`, đảm bảo tính toàn vẹn dữ liệu tuyệt đối.
+
+### 5. Tại sao POST và GET phải đọc/ghi cùng nguồn dữ liệu?
+* Để đảm bảo **tính nhất quán của dữ liệu (Data Consistency)** trong toàn bộ hệ thống.
+* Nếu `POST` ghi vào CSDL SQL Server nhưng `GET` lại đọc từ mảng trong RAM (hoặc ngược lại), người dùng sau khi thêm sinh viên thành công sẽ không thể nhìn thấy sinh viên đó trong danh sách, dẫn đến hiện tượng sai lệch dữ liệu nghiêm trọng và vi phạm hợp đồng API.

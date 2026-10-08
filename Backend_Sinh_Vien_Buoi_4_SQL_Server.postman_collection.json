@@ -1,0 +1,642 @@
+{
+	"info": {
+		"_postman_id": "b4a8e291-7c34-4d92-9a0e-sqlserver-buoi4",
+		"name": "Backend Sinh Vien - Buoi 4 SQL Server",
+		"description": "Postman Collection kiểm thử RESTful API Quản lý Sinh viên kết nối SQL Server và Sequelize 6 (Buổi 4 - Lập trình Backend Liên thông).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Kiểm tra trạng thái Server",
+			"item": [
+				{
+					"name": "T01 - GET Trạng thái hoạt động",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Phan hoi tra ve success = true va dung message\", () => {",
+									"    const res = pm.response.json();",
+									"    pm.expect(res.success).to.eql(true);",
+									"    pm.expect(res.message).to.eql(\"Backend quản lý sinh viên đang hoạt động\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T11 - GET Duong dan khong ton tai (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 404\", () => {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Phan hoi tra ve success = false\", () => {",
+									"    const res = pm.response.json();",
+									"    pm.expect(res.success).to.eql(false);",
+									"    pm.expect(res.message).to.eql(\"Không tìm thấy đường dẫn\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/khong-co",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"khong-co"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Doc du lieu tu SQL Server (GET)",
+			"item": [
+				{
+					"name": "T02 - GET Danh sach sinh vien",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Danh sach dung hop dong\", () => {",
+									"    pm.response.to.have.status(200);",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(true);",
+									"    pm.expect(b.data).to.be.an(\"array\");",
+									"    pm.expect(b.data.some(sv => sv.maSV === \"SV001\")).to.eql(true);",
+									"    pm.expect(b.data.some(sv => sv.maSV === \"SV002\")).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T03 - GET Tim sinh vien theo ma (SV001)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 200 va dung thong tin SV001\", () => {",
+									"    pm.response.to.have.status(200);",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(true);",
+									"    pm.expect(b.data).to.be.an(\"object\");",
+									"    pm.expect(b.data.maSV).to.eql(\"SV001\");",
+									"    pm.expect(b.data.hoTen).to.eql(\"Minh Nhật\");",
+									"    pm.expect(b.data.email).to.eql(\"minhnhat@example.com\");",
+									"    pm.expect(b.data.maLop).to.eql(\"25CT114\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien/SV001",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien",
+								"SV001"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T04 - GET Tim sinh vien khong ton tai (SV999 -> 404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 404\", () => {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Bao loi khong tim thay sinh vien\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(false);",
+									"    pm.expect(b.message).to.eql(\"Không tìm thấy sinh viên\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien/SV999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien",
+								"SV999"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Ghi du lieu & Luu ben vung (POST/GET)",
+			"item": [
+				{
+					"name": "T05 - POST Them sinh vien hop le (SV003)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 201 Created\", () => {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Thong bao them thanh cong va dung data\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(true);",
+									"    pm.expect(b.message).to.eql(\"Thêm sinh viên thành công\");",
+									"    pm.expect(b.data.maSV).to.eql(\"SV003\");",
+									"    pm.expect(b.data.hoTen).to.eql(\"Ngọc Mai\");",
+									"    pm.expect(b.data.email).to.eql(\"ngocmai@example.com\");",
+									"    pm.expect(b.data.maLop).to.eql(\"25CT114\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maSV\": \"SV003\",\n  \"hoTen\": \"Ngọc Mai\",\n  \"email\": \"ngocmai@example.com\",\n  \"maLop\": \"25CT114\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T05.1 - GET SV003 Kiem tra luu ben vung (Sau restart)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"SV003 van duoc luu\", () => {",
+									"    pm.response.to.have.status(200);",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(true);",
+									"    pm.expect(b.data.maSV).to.eql(\"SV003\");",
+									"    pm.expect(b.data.hoTen).to.eql(\"Ngọc Mai\");",
+									"    pm.expect(b.data.email).to.eql(\"ngocmai@example.com\");",
+									"    pm.expect(b.data.maLop).to.eql(\"25CT114\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien/SV003",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien",
+								"SV003"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T06 - POST Trung ma sinh vien (SV003 -> 409)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 409 Conflict\", () => {",
+									"    pm.response.to.have.status(409);",
+									"});",
+									"",
+									"pm.test(\"Thong bao ma sinh vien da ton tai\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(false);",
+									"    pm.expect(b.message).to.eql(\"Mã sinh viên đã tồn tại\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maSV\": \"SV003\",\n  \"hoTen\": \"Ngọc Mai\",\n  \"email\": \"ngocmai@example.com\",\n  \"maLop\": \"25CT114\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Kiem tra Validation va Xu ly loi (400)",
+			"item": [
+				{
+					"name": "T07 - POST Thieu hoTen / Ten chi chua khoang trang",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 400 Bad Request\", () => {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Thong bao loi thieu truong\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maSV\": \"SV004\",\n  \"email\": \"thunghiem@example.com\",\n  \"maLop\": \"25CT114\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T08 - POST maSV sai dinh dang (ABC004)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 400\", () => {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Thong bao sai dinh dang maSV\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(false);",
+									"    pm.expect(b.message).to.include(\"Mã sinh viên không đúng định dạng\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maSV\": \"ABC004\",\n  \"hoTen\": \"Test Format\",\n  \"email\": \"test@example.com\",\n  \"maLop\": \"25CT114\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T09 - POST Email sai dinh dang",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 400\", () => {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Thong bao email sai dinh dang\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(false);",
+									"    pm.expect(b.message).to.eql(\"Email không đúng định dạng\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maSV\": \"SV004\",\n  \"hoTen\": \"Nguyen Van D\",\n  \"email\": \"khong-phai-email\",\n  \"maLop\": \"25CT114\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T10 - POST hoTen vuot qua 150 ky tu",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 400\", () => {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Thong bao hoTen vuot qua 150 ky tu\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(false);",
+									"    pm.expect(b.message).to.eql(\"Họ tên không được vượt quá 150 ký tự\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maSV\": \"SV004\",\n  \"hoTen\": \"Nguyen Van Aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\n  \"email\": \"valid@example.com\",\n  \"maLop\": \"25CT114\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T11 - POST JSON bi hong cu phap",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 400\", () => {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Tra ve loi JSON\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"maSV\":\"SV004\""
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "T12 - POST maLop khong ton tai trong bang Lop (400)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code la 400\", () => {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Thong bao ma lop khong ton tai\", () => {",
+									"    const b = pm.response.json();",
+									"    pm.expect(b.success).to.eql(false);",
+									"    pm.expect(b.message).to.eql(\"Mã lớp không tồn tại\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"maSV\": \"SV004\",\n  \"hoTen\": \"Nguyen Van D\",\n  \"email\": \"nguyenvand@example.com\",\n  \"maLop\": \"LOP_KHONG_TON_TAI\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/sinh-vien",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"sinh-vien"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}

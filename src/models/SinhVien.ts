@@ -1,6 +1,7 @@
 import { Model, DataTypes } from 'sequelize';
-import type { InferAttributes, InferCreationAttributes } from 'sequelize';
+import type { InferAttributes, InferCreationAttributes, NonAttribute } from 'sequelize';
 import { sequelize } from '../config/database.js';
+import type { Lop } from './Lop.js';
 
 /**
  * Sequelize Model ánh xạ tới bảng dbo.SinhVien trong SQL Server
@@ -14,6 +15,9 @@ export class SinhVien extends Model<
   declare hoTen: string;
   declare email: string;
   declare maLop: string;
+
+  // Thuộc tính quan hệ (NonAttribute)
+  declare lop?: NonAttribute<Lop>;
 }
 
 SinhVien.init(
