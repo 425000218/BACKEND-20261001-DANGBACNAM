@@ -1,0 +1,18 @@
+import { sequelize } from '../config/database.js';
+import { SinhVien } from './SinhVien.js';
+import { Lop } from './Lop.js';
+
+// =======================================================================
+// Thiết lập quan hệ 1 - N (Một Lớp có nhiều Sinh Viên)
+// =======================================================================
+Lop.hasMany(SinhVien, {
+  foreignKey: 'maLop',
+  as: 'sinhViens',
+});
+
+SinhVien.belongsTo(Lop, {
+  foreignKey: 'maLop',
+  as: 'lop',
+});
+
+export { sequelize, SinhVien, Lop };

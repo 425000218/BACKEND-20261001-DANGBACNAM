@@ -1,6 +1,6 @@
-import { UniqueConstraintError } from 'sequelize';
+import { UniqueConstraintError, ForeignKeyConstraintError } from 'sequelize';
 import type { ISinhVienDTO } from '../dtos/sinhVien.dto.js';
-import { SinhVien } from '../models/SinhVien.js';
+import { SinhVien, Lop } from '../models/index.js';
 import { AppError } from '../utils/AppError.js';
 
 /**
@@ -40,7 +40,7 @@ export const timSinhVienTheoMa = async (
 };
 
 /**
- * Thêm sinh viên mới vào SQL Server với kiểm tra validation và giới hạn cột
+ * Thêm sinh viên mới vào SQL Server với kiểm tra validation, độ dài cột và ràng buộc khóa ngoại Lop
  */
 export const themSinhVien = async (input: unknown): Promise<ISinhVienDTO> => {
   // 1. Kiểm tra input phải là đối tượng JSON hợp lệ
@@ -100,13 +100,19 @@ export const themSinhVien = async (input: unknown): Promise<ISinhVienDTO> => {
     throw new AppError(400, 'Email không đúng định dạng');
   }
 
-  // 8. Kiểm tra trước xem maSV đã tồn tại trong database chưa
+  // 8. Ràng buộc quan hệ Lớp: Kiểm tra mã lớp có tồn tại trong bảng dbo.Lop không
+  const lop = await Lop.findByPk(maLop);
+  if (!lop) {
+    throw new AppError(400, 'Mã lớp không tồn tại');
+  }
+
+  // 9. Kiểm tra trước xem maSV đã tồn tại trong database chưa
   const existing = await SinhVien.findByPk(maSV);
   if (existing) {
     throw new AppError(409, 'Mã sinh viên đã tồn tại');
   }
 
-  // 9. Thêm bản ghi mới vào CSDL, bắt thêm lỗi UniqueConstraintError nếu có tranh chấp
+  // 10. Thêm bản ghi mới vào CSDL, bắt thêm lỗi UniqueConstraintError & ForeignKeyConstraintError
   try {
     const created = await SinhVien.create({
       maSV,
@@ -124,6 +130,9 @@ export const themSinhVien = async (input: unknown): Promise<ISinhVienDTO> => {
   } catch (error: unknown) {
     if (error instanceof UniqueConstraintError) {
       throw new AppError(409, 'Mã sinh viên đã tồn tại');
+    }
+    if (error instanceof ForeignKeyConstraintError) {
+      throw new AppError(400, 'Mã lớp không tồn tại');
     }
     throw error;
   }
