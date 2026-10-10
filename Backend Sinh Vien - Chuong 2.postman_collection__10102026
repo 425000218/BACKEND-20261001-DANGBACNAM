@@ -1,0 +1,342 @@
+{
+  "info": {
+    "_postman_id": "ecc4b2aa-693d-45f7-9dd1-fba269742d41",
+    "name": "Backend Sinh Vien - Chuong 2",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57969903",
+    "_collection_link": "https://go.postman.co/collection/57969903-ecc4b2aa-693d-45f7-9dd1-fba269742d41?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "01 - Kiểm tra Server",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "02 - Lấy danh sách Sinh Viên",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status la 200\", function () {\r\npm.response.to.have.status(200);\r\n});\r\npm.test(\"Tra danh sach co SV001\", function () {\r\nconst body = pm.response.json();\r\npm.expect(body.success).to.eql(true);\r\npm.expect(body.data).to.be.an(\"array\");\r\npm.expect(body.data.some(function (sv) {\r\nreturn sv.maSV === \"SV001\";\r\n})).to.eql(true);\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "03 - Tìm SV001",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien/SV001",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien",
+            "SV001"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "04 - Không có SV999",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien/SV999",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien",
+            "SV999"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "05 - Đường dẫn không tồn tại",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseURL}}/abc",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "abc"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "06 - Thêm SV003",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\"maSV\": \"SV003\",\r\n\"hoTen\": \"Ngọc Mai\",\r\n\"email\": \"ngocmai@example.com\",\r\n\"maLop\": \"25CT114\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07 - Đọc lại SV003",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien/SV003",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien",
+            "SV003"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07.2  - Delete SV003",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien/SV003",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien",
+            "SV003"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "07.1 - Update lại SV003",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\"maSV\": \"SV003\",\r\n\"hoTen\": \"Ngọc Mai Updated\",\r\n\"email\": \"ngocmai@example.com\",\r\n\"maLop\": \"25CT114\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien/SV003",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien",
+            "SV003"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "08 - Từ chối trùng SV003",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status la 409 Conflict\", function () {\r\n    pm.response.to.have.status(409);\r\n});\r\npm.test(\"Thong bao ma sinh vien da ton tai\", function () {\r\n    const body = pm.response.json();\r\n    pm.expect(body.success).to.eql(false);\r\n    pm.expect(body.message).to.eql(\"Mã sinh viên đã tồn tại\");\r\n});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\"maSV\": \"SV003\",\r\n\"hoTen\": \"Ngọc Mai\",\r\n\"email\": \"ngocmai@example.com\",\r\n\"maLop\": \"25CT114\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "09 - Thiếu họ tên",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\"maSV\": \"SV004\",\r\n\"email\": \"thunghiem@example.com\",\r\n\"maLop\": \"25CT114\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "10 - POST Json hỏng",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\"maSV\": \"SV004\"",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseURL}}/api/v1/sinh-vien",
+          "host": [
+            "{{baseURL}}"
+          ],
+          "path": [
+            "api",
+            "v1",
+            "sinh-vien"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseURL",
+      "value": ""
+    }
+  ]
+}

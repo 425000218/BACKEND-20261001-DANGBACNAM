@@ -12,7 +12,7 @@ GO
 
 IF NOT EXISTS (SELECT * FROM sys.server_principals WHERE name = N'sv_app')
 BEGIN
-    -- Bạn có thể thay đổi 'MAT_KHAU_LOCAL_CUA_BAN' bằng mật khẩu mong muốn trên máy của bạn
+    -- Thay 'MAT_KHAU_LOCAL_CUA_BAN' bằng mật khẩu local của bạn trước khi chạy
     CREATE LOGIN sv_app WITH PASSWORD = N'MAT_KHAU_LOCAL_CUA_BAN', CHECK_POLICY = OFF;
     PRINT N'Đã tạo mới Login sv_app.';
 END
@@ -37,9 +37,7 @@ BEGIN
 END
 GO
 
--- 3. Cấp quyền truy cập tối thiểu: Chỉ SELECT và INSERT trên bảng dbo.SinhVien
--- Lý do thiết kế: Ứng dụng Backend hiện tại chỉ cần đọc danh sách/tìm kiếm (GET) và thêm mới (POST)
--- Tuyệt đối không cấp quyền sysadmin, db_owner hoặc UPDATE/DELETE khi chưa cần thiết.
-GRANT SELECT, INSERT ON dbo.SinhVien TO sv_app;
-PRINT N'Đã cấp quyền SELECT và INSERT trên bảng dbo.SinhVien cho sv_app thành công.';
+-- 3. Cấp quyền truy cập cho ứng dụng: Đầy đủ 4 thao tác CRUD (SELECT, INSERT, UPDATE, DELETE) trên dbo.SinhVien
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.SinhVien TO sv_app;
+PRINT N'Đã cấp quyền SELECT, INSERT, UPDATE, DELETE trên bảng dbo.SinhVien cho sv_app thành công.';
 GO

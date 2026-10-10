@@ -1,11 +1,13 @@
-import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import sinhVienRoutes from './routes/sinhVien.routes.js';
-import { loggerMiddleware } from './middlewares/logger.middleware.js';
-import { errorMiddleware } from './middlewares/error.middleware.js';
-import { sequelize } from './config/database.js';
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import helmet from "helmet";
+import sinhVienRoutes from "./routes/sinhVien.routes.js";
+import { loggerMiddleware } from "./middlewares/logger.middleware.js";
+import { errorMiddleware } from "./middlewares/error.middleware.js";
+import { sequelize } from "./config/database.js";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./config/swagger.config.js";
 
 const app = express();
 
@@ -20,21 +22,24 @@ app.use(cors());
 app.use(express.json());
 
 // 4. Tuyến đường gốc kiểm tra trạng thái hoạt động của server
-app.get('/', (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
-    message: 'Backend quản lý sinh viên đang hoạt động',
+    message: "Backend quản lý sinh viên đang hoạt động",
   });
 });
 
-// 5. Gắn route quản lý sinh viên
-app.use('/api/v1/sinh-vien', sinhVienRoutes);
+// 5. Gắn Swagger UI tại đường dẫn /api-docs (trước handler 404)
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// 6. Gắn route quản lý sinh viên
+app.use("/api/v1/sinh-vien", sinhVienRoutes);
 
 // 6. Xử lý đường dẫn không tồn tại (404)
 app.use((req, res) => {
   res.status(404).json({
     success: false,
-    message: 'Không tìm thấy đường dẫn',
+    message: "Không tìm thấy đường dẫn",
   });
 });
 
@@ -47,7 +52,9 @@ async function start(): Promise<void> {
   try {
     // 1. Kiểm tra kết nối tới cơ sở dữ liệu
     await sequelize.authenticate();
-    console.log(`Kết nối CSDL thành công tới: ${process.env.DB_NAME ?? 'QuanLySinhVienDB'}`);
+    console.log(
+      `Kết nối CSDL thành công tới: ${process.env.DB_NAME ?? "QuanLySinhVienDB"}`,
+    );
 
     // 2. Khởi động server lắng nghe HTTP
     app.listen(PORT, () => {
@@ -55,7 +62,10 @@ async function start(): Promise<void> {
     });
   } catch (error: unknown) {
     const err = error as Error;
-    console.error('Không thể khởi động server do lỗi kết nối CSDL:', err.message);
+    console.error(
+      "Không thể khởi động server do lỗi kết nối CSDL:",
+      err.message,
+    );
     try {
       await sequelize.close();
     } catch {

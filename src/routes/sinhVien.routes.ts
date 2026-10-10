@@ -1,19 +1,28 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
   getDanhSachSinhVien,
   getSinhVienTheoMa,
   taoSinhVien,
-} from '../controllers/sinhVien.controller.js';
+  capNhatSinhVien,
+  xoaSinhVien,
+} from "../controllers/sinhVien.controller.js";
 
 const router = Router();
 
-// Lấy danh sách sinh viên
-router.get('/', getDanhSachSinhVien);
+// 1. Lấy danh sách sinh viên
+router.get("/", getDanhSachSinhVien);
 
-// Tìm sinh viên theo mã sinh viên
-router.get('/:maSV', getSinhVienTheoMa);
+// 2. Tìm sinh viên theo mã sinh viên
+router.get("/:maSV", getSinhVienTheoMa);
 
-// Thêm sinh viên mới
-router.post('/', taoSinhVien);
+// 3. Thêm sinh viên mới
+router.post("/", taoSinhVien);
+
+// 4. Cập nhật sinh viên theo mã
+router.put("/:maSV", capNhatSinhVien);
+
+// 5. Xóa sinh viên theo mã
+router.delete("/:maSV", xoaSinhVien);
 
 export default router;
+
