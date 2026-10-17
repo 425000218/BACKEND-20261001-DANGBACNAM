@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
-import { registerUser, loginUser } from '../services/auth.service.js';
+import { registerUser, loginUser, getUserProfile } from '../services/auth.service.js';
+import { AppError } from '../utils/AppError.js';
 
 /**
  * Controller xử lý yêu cầu Đăng ký tài khoản (POST /api/auth/register)
@@ -35,6 +36,30 @@ export const login = async (
       success: true,
       message: 'Đăng nhập thành công',
       data: authData,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Controller lấy thông tin tài khoản hiện tại (GET /api/auth/profile)
+ * Yêu cầu đăng nhập (đã qua isAuth)
+ */
+export const getProfile = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user || !req.user.id) {
+      throw new AppError(401, 'Yêu cầu Bearer token để xác thực');
+    }
+    const profile = await getUserProfile(req.user.id);
+    res.status(200).json({
+      success: true,
+      message: 'Lấy thông tin hồ sơ thành công',
+      data: profile,
     });
   } catch (error) {
     next(error);

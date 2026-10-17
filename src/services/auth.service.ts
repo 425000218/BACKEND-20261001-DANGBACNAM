@@ -160,3 +160,26 @@ export const loginUser = async (input: unknown): Promise<ILoginResponseDTO> => {
     expiresIn: 3600,
   };
 };
+
+/**
+ * Service lấy thông tin hồ sơ người dùng theo ID (GET /api/auth/profile)
+ * Tuyệt đối không trả passwordHash
+ */
+export const getUserProfile = async (userId: string): Promise<IUserResponseDTO> => {
+  const numericId = parseInt(userId, 10);
+  if (isNaN(numericId)) {
+    throw new AppError(400, 'ID người dùng không hợp lệ');
+  }
+
+  const user = await User.findByPk(numericId);
+  if (!user) {
+    throw new AppError(404, 'Người dùng không tồn tại');
+  }
+
+  return {
+    id: user.id,
+    fullName: user.fullName,
+    email: user.email,
+    role: user.role,
+  };
+};
