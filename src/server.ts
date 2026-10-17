@@ -4,6 +4,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import sinhVienRoutes from "./routes/sinhVien.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import { loggerMiddleware } from "./middlewares/logger.middleware.js";
 import { errorMiddleware } from "./middlewares/error.middleware.js";
 import { sequelize } from "./config/database.js";
@@ -39,6 +40,9 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 5b. Giao diện kiểm thử trực quan (Playwright MCP & Dev)
 app.use("/client", express.static(path.join(process.cwd(), "public")));
+
+// 5c. Gắn route xác thực tài khoản (Register, Login, Profile)
+app.use("/api/auth", authRoutes);
 
 // 6. Gắn route quản lý sinh viên
 app.use("/api/v1/sinh-vien", sinhVienRoutes);
