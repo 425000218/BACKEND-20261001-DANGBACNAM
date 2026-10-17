@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { User } from '../models/user.model.js';
 import { AppError } from '../utils/AppError.js';
+import { generateToken } from '../utils/jwt.js';
 
 export interface IUserResponseDTO {
   id: number;
@@ -94,5 +95,68 @@ export const registerUser = async (input: unknown): Promise<IUserResponseDTO> =>
     fullName: newUser.fullName,
     email: newUser.email,
     role: newUser.role,
+  };
+};
+
+export interface ILoginResponseDTO {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+}
+
+/**
+ * Service xử lý Đăng nhập tài khoản (POST /api/auth/login)
+ * - Kiểm tra định dạng dữ liệu (Validation)
+ * - Tra cứu User theo email
+ * - So khớp mật khẩu bằng bcrypt.compare
+ * - Báo lỗi chung 401 khi email không tồn tại hoặc sai mật khẩu (tránh enumeration)
+ * - Cấp JWT Access Token HS256 có sub và role, hạn 1 giờ
+ */
+export const loginUser = async (input: unknown): Promise<ILoginResponseDTO> => {
+  // 1. Kiểm tra cấu trúc input
+  if (typeof input !== 'object' || input === null || Array.isArray(input)) {
+    throw new AppError(400, 'Dữ liệu gửi lên phải là một đối tượng JSON');
+  }
+
+  const rawData = input as Record<string, unknown>;
+
+  // 2. Kiểm tra các trường bắt buộc
+  if (
+    typeof rawData.email !== 'string' ||
+    typeof rawData.password !== 'string'
+  ) {
+    throw new AppError(400, 'Cần cung cấp đầy đủ email và password kiểu chuỗi');
+  }
+
+  const email = rawData.email.trim().toLowerCase();
+  const password = rawData.password;
+
+  if (email.length === 0 || password.length === 0) {
+    throw new AppError(400, 'Email và mật khẩu không được để trống');
+  }
+
+  // 3. Tra cứu người dùng theo email
+  const user = await User.findOne({ where: { email } });
+  if (!user) {
+    // Tránh tấn công dò email: dùng chung thông điệp lỗi 401
+    throw new AppError(401, 'Email hoặc mật khẩu không chính xác');
+  }
+
+  // 4. So khớp mật khẩu với hash trong CSDL
+  const isMatch = await bcrypt.compare(password, user.passwordHash);
+  if (!isMatch) {
+    throw new AppError(401, 'Email hoặc mật khẩu không chính xác');
+  }
+
+  // 5. Tạo Access Token với payload gồm sub (id) và role
+  const accessToken = generateToken({
+    sub: String(user.id),
+    role: user.role,
+  });
+
+  return {
+    accessToken,
+    tokenType: 'Bearer',
+    expiresIn: 3600,
   };
 };

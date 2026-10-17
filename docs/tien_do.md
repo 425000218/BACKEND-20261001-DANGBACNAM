@@ -16,7 +16,7 @@
 | **M01** | CSDL SQL Server & Sequelize Model User | `DONE` | 3 tasks | Bảng `dbo.Users` đã tạo và xác thực với Sequelize |
 | **M02** | Thư viện Bảo mật & JWT Utility | `DONE` | 3 tasks | `bcrypt`, `jsonwebtoken`, `jwt.ts` (HS256, 1h) |
 | **M03** | API Đăng ký tài khoản (Register) | `DONE` | 3 tasks | `POST /api/auth/register`, hash cost 12, screenshot: module-3-register.png |
-| **M04** | API Đăng nhập & Cấp Access Token | `TODO` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare` |
+| **M04** | API Đăng nhập & Cấp Access Token | `IN PROCESS` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare` |
 | **M05** | Middleware `isAuth` & API Profile | `TODO` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile` (401) |
 | **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `TODO` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE (403) |
 | **M07** | Tạo tài khoản Admin môi trường Dev | `TODO` | 2 tasks | `seed-admin.ts`, role admin |
