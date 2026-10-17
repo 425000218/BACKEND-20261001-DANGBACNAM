@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "node:path";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -14,8 +15,12 @@ const app = express();
 // 1. Logger middleware
 app.use(loggerMiddleware);
 
-// 2. Bảo mật headers và CORS
-app.use(helmet());
+// 2. Bảo mật headers và CORS (cho phép Swagger và Client test chạy scripts)
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
 app.use(cors());
 
 // 3. Parser JSON
@@ -31,6 +36,9 @@ app.get("/", (req, res) => {
 
 // 5. Gắn Swagger UI tại đường dẫn /api-docs (trước handler 404)
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// 5b. Giao diện kiểm thử trực quan (Playwright MCP & Dev)
+app.use("/client", express.static(path.join(process.cwd(), "public")));
 
 // 6. Gắn route quản lý sinh viên
 app.use("/api/v1/sinh-vien", sinhVienRoutes);
