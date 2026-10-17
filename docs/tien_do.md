@@ -20,8 +20,8 @@
 | **M05** | Middleware `isAuth` & API Profile | `DONE` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile`, screenshot: module-5-profile.png |
 | **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `DONE` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE, screenshot: module-6-rbac.png |
 | **M07** | Tạo tài khoản Admin môi trường Dev | `DONE` | 2 tasks | `seed-admin.ts`, role admin, screenshot: module-7-seed-admin.png |
-| **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `IN PROCESS` | 3 tasks | `bearerAuth`, response 401/403 |
-| **M09** | Kiểm thử Toàn diện 24 Ca Test Postman | `TODO` | 3 tasks | A01–A12, B01–B12 |
+| **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `DONE` | 3 tasks | `bearerAuth`, response 401/403, screenshot: module-8-swagger.png |
+| **M09** | Kiểm thử Toàn diện 24 Ca Test Postman | `IN PROCESS` | 3 tasks | A01–A12, B01–B12 |
 | **M10** | Tổng kết, Báo cáo & Trả lời 8 câu hỏi | `TODO` | 3 tasks | `test-results.md`, `prompt-log.md` |
 
 ---
@@ -85,9 +85,9 @@
 ---
 
 ### 🔹 Module 8: Cập nhật Swagger OpenAPI 3.0 YAML
-* [ ] **Task 8.1**: Bổ sung `components.securitySchemes.bearerAuth` vào `docs/openapi.yaml`.
-* [ ] **Task 8.2**: Khai báo 3 endpoint `/api/auth/register`, `/api/auth/login`, `/api/auth/profile`.
-* [ ] **Task 8.3**: Gắn `security: - bearerAuth: []` và mô tả response `401`, `403` cho các endpoint được bảo vệ.
+* [x] **Task 8.1**: Bổ sung `components.securitySchemes.bearerAuth` vào `docs/openapi.yaml`.
+* [x] **Task 8.2**: Khai báo 3 endpoint `/api/auth/register`, `/api/auth/login`, `/api/auth/profile`.
+* [x] **Task 8.3**: Gắn `security: - bearerAuth: []` và mô tả response `401`, `403` cho các endpoint được bảo vệ.
 
 ---
 
