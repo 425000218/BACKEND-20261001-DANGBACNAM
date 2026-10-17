@@ -17,8 +17,8 @@
 | **M02** | Thư viện Bảo mật & JWT Utility | `DONE` | 3 tasks | `bcrypt`, `jsonwebtoken`, `jwt.ts` (HS256, 1h) |
 | **M03** | API Đăng ký tài khoản (Register) | `DONE` | 3 tasks | `POST /api/auth/register`, hash cost 12, screenshot: module-3-register.png |
 | **M04** | API Đăng nhập & Cấp Access Token | `DONE` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare`, screenshot: module-4-login.png |
-| **M05** | Middleware `isAuth` & API Profile | `IN PROCESS` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile` (401) |
-| **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `TODO` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE (403) |
+| **M05** | Middleware `isAuth` & API Profile | `DONE` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile`, screenshot: module-5-profile.png |
+| **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `IN PROCESS` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE (403) |
 | **M07** | Tạo tài khoản Admin môi trường Dev | `TODO` | 2 tasks | `seed-admin.ts`, role admin |
 | **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `TODO` | 3 tasks | `bearerAuth`, response 401/403 |
 | **M09** | Kiểm thử Toàn diện 24 Ca Test Postman | `TODO` | 3 tasks | A01–A12, B01–B12 |
@@ -65,9 +65,9 @@
 ---
 
 ### 🔹 Module 5: Middleware `isAuth` & API Xem Hồ sơ (Profile)
-* [ ] **Task 5.1**: Mở rộng khai báo kiểu Request của Express (`src/types/express.d.ts`) chứa `req.user: { id: string; role: string }`.
-* [ ] **Task 5.2**: Viết middleware `src/middlewares/isAuth.ts` đọc header `Authorization: Bearer <token>`, gọi `verifyToken`, gán `req.user` và gọi `next()` (chặn 401 nếu thiếu/sai/hết hạn).
-* [ ] **Task 5.3**: Viết endpoint `GET /api/auth/profile` được bảo vệ bởi `isAuth`, trả về thông tin người dùng đang đăng nhập.
+* [x] **Task 5.1**: Mở rộng khai báo kiểu Request của Express (`src/types/express.d.ts`) chứa `req.user: { id: string; role: string }`.
+* [x] **Task 5.2**: Viết middleware `src/middlewares/isAuth.ts` đọc header `Authorization: Bearer <token>`, gọi `verifyToken`, gán `req.user` và gọi `next()` (chặn 401 nếu thiếu/sai/hết hạn).
+* [x] **Task 5.3**: Viết endpoint `GET /api/auth/profile` được bảo vệ bởi `isAuth`, trả về thông tin người dùng đang đăng nhập.
 
 ---
 
