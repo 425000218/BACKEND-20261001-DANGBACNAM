@@ -18,8 +18,8 @@
 | **M03** | API Đăng ký tài khoản (Register) | `DONE` | 3 tasks | `POST /api/auth/register`, hash cost 12, screenshot: module-3-register.png |
 | **M04** | API Đăng nhập & Cấp Access Token | `DONE` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare`, screenshot: module-4-login.png |
 | **M05** | Middleware `isAuth` & API Profile | `DONE` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile`, screenshot: module-5-profile.png |
-| **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `IN PROCESS` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE (403) |
-| **M07** | Tạo tài khoản Admin môi trường Dev | `TODO` | 2 tasks | `seed-admin.ts`, role admin |
+| **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `DONE` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE, screenshot: module-6-rbac.png |
+| **M07** | Tạo tài khoản Admin môi trường Dev | `IN PROCESS` | 2 tasks | `seed-admin.ts`, role admin |
 | **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `TODO` | 3 tasks | `bearerAuth`, response 401/403 |
 | **M09** | Kiểm thử Toàn diện 24 Ca Test Postman | `TODO` | 3 tasks | A01–A12, B01–B12 |
 | **M10** | Tổng kết, Báo cáo & Trả lời 8 câu hỏi | `TODO` | 3 tasks | `test-results.md`, `prompt-log.md` |
@@ -72,9 +72,9 @@
 ---
 
 ### 🔹 Module 6: Middleware `isAdmin` & Phân quyền SinhVien
-* [ ] **Task 6.1**: Viết middleware `src/middlewares/isAdmin.ts` kiểm tra `req.user.role === 'admin'`. Nếu không phải admin trả về `403 Forbidden`.
-* [ ] **Task 6.2**: Gắn `isAuth, isAdmin` vào 3 Route: `POST /api/v1/sinh-vien`, `PUT /api/v1/sinh-vien/:maSV`, `DELETE /api/v1/sinh-vien/:maSV` trong `src/routes/sinhVien.routes.ts`.
-* [ ] **Task 6.3**: Giữ nguyên `GET /api/v1/sinh-vien` và `GET /api/v1/sinh-vien/:maSV` ở chế độ Public.
+* [x] **Task 6.1**: Viết middleware `src/middlewares/isAdmin.ts` kiểm tra `req.user.role === 'admin'`. Nếu không phải admin trả về `403 Forbidden`.
+* [x] **Task 6.2**: Gắn `isAuth, isAdmin` vào 3 Route: `POST /api/v1/sinh-vien`, `PUT /api/v1/sinh-vien/:maSV`, `DELETE /api/v1/sinh-vien/:maSV` trong `src/routes/sinhVien.routes.ts`.
+* [x] **Task 6.3**: Giữ nguyên `GET /api/v1/sinh-vien` và `GET /api/v1/sinh-vien/:maSV` ở chế độ Public.
 
 ---
 
