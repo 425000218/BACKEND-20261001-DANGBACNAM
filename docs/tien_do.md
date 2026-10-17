@@ -16,8 +16,8 @@
 | **M01** | CSDL SQL Server & Sequelize Model User | `DONE` | 3 tasks | Bảng `dbo.Users` đã tạo và xác thực với Sequelize |
 | **M02** | Thư viện Bảo mật & JWT Utility | `DONE` | 3 tasks | `bcrypt`, `jsonwebtoken`, `jwt.ts` (HS256, 1h) |
 | **M03** | API Đăng ký tài khoản (Register) | `DONE` | 3 tasks | `POST /api/auth/register`, hash cost 12, screenshot: module-3-register.png |
-| **M04** | API Đăng nhập & Cấp Access Token | `IN PROCESS` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare` |
-| **M05** | Middleware `isAuth` & API Profile | `TODO` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile` (401) |
+| **M04** | API Đăng nhập & Cấp Access Token | `DONE` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare`, screenshot: module-4-login.png |
+| **M05** | Middleware `isAuth` & API Profile | `IN PROCESS` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile` (401) |
 | **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `TODO` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE (403) |
 | **M07** | Tạo tài khoản Admin môi trường Dev | `TODO` | 2 tasks | `seed-admin.ts`, role admin |
 | **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `TODO` | 3 tasks | `bearerAuth`, response 401/403 |
@@ -51,16 +51,16 @@
 ---
 
 ### 🔹 Module 3: Chức năng Đăng ký tài khoản (Register)
-* [ ] **Task 3.1**: Định nghĩa schema/validation cho dữ liệu đăng ký (`fullName`, `email`, `password`).
-* [ ] **Task 3.2**: Viết `src/services/auth.service.ts`: kiểm tra email trùng (409), băm mật khẩu `bcrypt.hash(password, 12)`, gán cứng role `student` (từ chối role từ client).
-* [ ] **Task 3.3**: Viết `src/controllers/auth.controller.ts` và `src/routes/auth.routes.ts` (`POST /api/auth/register`), trả về 201 Created và thông tin user công khai (không trả passwordHash).
+* [x] **Task 3.1**: Định nghĩa schema/validation cho dữ liệu đăng ký (`fullName`, `email`, `password`).
+* [x] **Task 3.2**: Viết `src/services/auth.service.ts`: kiểm tra email trùng (409), băm mật khẩu `bcrypt.hash(password, 12)`, gán cứng role `student` (từ chối role từ client).
+* [x] **Task 3.3**: Viết `src/controllers/auth.controller.ts` và `src/routes/auth.routes.ts` (`POST /api/auth/register`), trả về 201 Created và thông tin user công khai (không trả passwordHash).
 
 ---
 
 ### 🔹 Module 4: Chức năng Đăng nhập & Cấp JWT (Login)
-* [ ] **Task 4.1**: Viết hàm `loginUser` trong `auth.service.ts`: tìm user theo email, so sánh bằng `bcrypt.compare`.
-* [ ] **Task 4.2**: Nếu sai email hoặc sai mật khẩu, trả lỗi chung 401 Unauthorized (không tiết lộ tài khoản tồn tại hay không).
-* [ ] **Task 4.3**: Nếu đúng, gọi `generateToken` và trả về `200 OK` kèm `{ accessToken, tokenType: "Bearer", expiresIn: 3600 }`.
+* [x] **Task 4.1**: Viết hàm `loginUser` trong `auth.service.ts`: tìm user theo email, so sánh bằng `bcrypt.compare`.
+* [x] **Task 4.2**: Nếu sai email hoặc sai mật khẩu, trả lỗi chung 401 Unauthorized (không tiết lộ tài khoản tồn tại hay không).
+* [x] **Task 4.3**: Nếu đúng, gọi `generateToken` và trả về `200 OK` kèm `{ accessToken, tokenType: "Bearer", expiresIn: 3600 }`.
 
 ---
 
