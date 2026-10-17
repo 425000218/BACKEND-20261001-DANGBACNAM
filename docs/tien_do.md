@@ -13,8 +13,8 @@
 | Mã Module | Tên Module | Trạng thái | Số task | Ghi chú & Bằng chứng |
 |:---:|---|:---:|:---:|---|
 | **M00** | Khởi tạo Tiến độ & Giao diện Test Trực quan | `DONE` | 4 tasks | Giao diện `/client` hoạt động, screenshot: module-0-client.png |
-| **M01** | CSDL SQL Server & Sequelize Model User | `IN PROCESS` | 3 tasks | Bảng `dbo.Users`, role student/admin |
-| **M02** | Thư viện Bảo mật & JWT Utility | `TODO` | 3 tasks | `bcrypt`, `jsonwebtoken`, `jwt.ts` |
+| **M01** | CSDL SQL Server & Sequelize Model User | `DONE` | 3 tasks | Bảng `dbo.Users` đã tạo và xác thực với Sequelize |
+| **M02** | Thư viện Bảo mật & JWT Utility | `IN PROCESS` | 3 tasks | `bcrypt`, `jsonwebtoken`, `jwt.ts` |
 | **M03** | API Đăng ký tài khoản (Register) | `TODO` | 3 tasks | `POST /api/auth/register`, hash cost 12 |
 | **M04** | API Đăng nhập & Cấp Access Token | `TODO` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare` |
 | **M05** | Middleware `isAuth` & API Profile | `TODO` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile` (401) |
@@ -44,9 +44,9 @@
 ---
 
 ### 🔹 Module 2: Thư viện Bảo mật & JWT Utility
-* [ ] **Task 2.1**: Cài đặt các gói `bcrypt`, `jsonwebtoken`, `@types/bcrypt`, `@types/jsonwebtoken` bằng pnpm.
-* [ ] **Task 2.2**: Cấu hình biến `JWT_SECRET` trong `.env` và cập nhật `.env.example`.
-* [ ] **Task 2.3**: Tạo module `src/utils/jwt.ts` chứa hàm `generateToken` (ký HS256, hạn 1h) và `verifyToken` (xác minh chữ ký, hạn dùng, thuật toán).
+* [x] **Task 2.1**: Cài đặt các gói `bcrypt`, `jsonwebtoken`, `@types/bcrypt`, `@types/jsonwebtoken` bằng pnpm.
+* [x] **Task 2.2**: Cấu hình biến `JWT_SECRET` trong `.env` và cập nhật `.env.example`.
+* [x] **Task 2.3**: Tạo module `src/utils/jwt.ts` chứa hàm `generateToken` (ký HS256, hạn 1h) và `verifyToken` (xác minh chữ ký, hạn dùng, thuật toán). Chạy test đơn vị thành công (sinh token 3 phần, bắt lỗi sửa token).
 
 ---
 
