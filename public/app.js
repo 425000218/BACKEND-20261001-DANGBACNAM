@@ -144,8 +144,10 @@ async function handleCreateSinhVien() {
     email: document.getElementById('svEmail').value,
     maLop: document.getElementById('svLop').value,
   };
-  await apiRequest('POST', '/api/v1/sinh-vien', body, true);
-  handleGetSinhVien();
+  const res = await apiRequest('POST', '/api/v1/sinh-vien', body, true);
+  if (res.status === 201) {
+    handleGetSinhVien();
+  }
 }
 
 async function handleUpdateSinhVien() {
@@ -155,14 +157,18 @@ async function handleUpdateSinhVien() {
     email: document.getElementById('svEmail').value,
     maLop: document.getElementById('svLop').value,
   };
-  await apiRequest('PUT', `/api/v1/sinh-vien/${maSV}`, body, true);
-  handleGetSinhVien();
+  const res = await apiRequest('PUT', `/api/v1/sinh-vien/${maSV}`, body, true);
+  if (res.status === 200) {
+    handleGetSinhVien();
+  }
 }
 
 async function handleDeleteSinhVien() {
   const maSV = document.getElementById('svMa').value;
-  await apiRequest('DELETE', `/api/v1/sinh-vien/${maSV}`, null, true);
-  handleGetSinhVien();
+  const res = await apiRequest('DELETE', `/api/v1/sinh-vien/${maSV}`, null, true);
+  if (res.status === 200) {
+    handleGetSinhVien();
+  }
 }
 
 // Bind event listeners when DOM loads
