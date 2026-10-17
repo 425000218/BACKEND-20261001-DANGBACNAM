@@ -1,6 +1,7 @@
 import { sequelize } from '../config/database.js';
 import { SinhVien } from './SinhVien.js';
 import { Lop } from './Lop.js';
+import { User } from './user.model.js';
 
 // =======================================================================
 // Thiết lập quan hệ 1 - N (Một Lớp có nhiều Sinh Viên)
@@ -15,4 +16,4 @@ SinhVien.belongsTo(Lop, {
   as: 'lop',
 });
 
-export { sequelize, SinhVien, Lop };
+export { sequelize, SinhVien, Lop, User };

@@ -12,8 +12,8 @@
 
 | Mã Module | Tên Module | Trạng thái | Số task | Ghi chú & Bằng chứng |
 |:---:|---|:---:|:---:|---|
-| **M00** | Khởi tạo Tiến độ & Giao diện Test Trực quan | `IN PROCESS` | 4 tasks | Tạo giao diện `/client` cho Playwright MCP |
-| **M01** | CSDL SQL Server & Sequelize Model User | `TODO` | 3 tasks | Bảng `dbo.Users`, role student/admin |
+| **M00** | Khởi tạo Tiến độ & Giao diện Test Trực quan | `DONE` | 4 tasks | Giao diện `/client` hoạt động, screenshot: module-0-client.png |
+| **M01** | CSDL SQL Server & Sequelize Model User | `IN PROCESS` | 3 tasks | Bảng `dbo.Users`, role student/admin |
 | **M02** | Thư viện Bảo mật & JWT Utility | `TODO` | 3 tasks | `bcrypt`, `jsonwebtoken`, `jwt.ts` |
 | **M03** | API Đăng ký tài khoản (Register) | `TODO` | 3 tasks | `POST /api/auth/register`, hash cost 12 |
 | **M04** | API Đăng nhập & Cấp Access Token | `TODO` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare` |
@@ -37,9 +37,9 @@
 ---
 
 ### 🔹 Module 1: CSDL SQL Server & Sequelize Model User
-* [ ] **Task 1.1**: Viết script `sql/04-users-auth.sql` tạo bảng `dbo.Users` với các ràng buộc an toàn (ID Identity PK, fullName, email UNIQUE, passwordHash, role DEFAULT 'student').
-* [ ] **Task 1.2**: Chạy script SQL và cấp quyền SELECT, INSERT, UPDATE trên bảng `dbo.Users` cho tài khoản `sv_app`.
-* [ ] **Task 1.3**: Tạo Model Sequelize `src/models/user.model.ts` (không timestamps, schema `dbo`, table `Users`) và đăng ký trong `src/models/index.ts`.
+* [x] **Task 1.1**: Viết script `sql/04-users-auth.sql` tạo bảng `dbo.Users` với các ràng buộc an toàn (ID Identity PK, fullName, email UNIQUE, passwordHash, role DEFAULT 'student').
+* [x] **Task 1.2**: Chạy script SQL và cấp quyền SELECT, INSERT trên bảng `dbo.Users` cho tài khoản `sv_app`.
+* [x] **Task 1.3**: Tạo Model Sequelize `src/models/user.model.ts` (không timestamps, schema `dbo`, table `Users`) và đăng ký trong `src/models/index.ts`. Xác nhận truy vấn `User.count()` thành công.
 
 ---
 
