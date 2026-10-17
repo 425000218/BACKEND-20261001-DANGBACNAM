@@ -19,8 +19,8 @@
 | **M04** | API Đăng nhập & Cấp Access Token | `DONE` | 3 tasks | `POST /api/auth/login`, `bcrypt.compare`, screenshot: module-4-login.png |
 | **M05** | Middleware `isAuth` & API Profile | `DONE` | 3 tasks | `isAuth.ts`, `GET /api/auth/profile`, screenshot: module-5-profile.png |
 | **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `DONE` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE, screenshot: module-6-rbac.png |
-| **M07** | Tạo tài khoản Admin môi trường Dev | `IN PROCESS` | 2 tasks | `seed-admin.ts`, role admin |
-| **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `TODO` | 3 tasks | `bearerAuth`, response 401/403 |
+| **M07** | Tạo tài khoản Admin môi trường Dev | `DONE` | 2 tasks | `seed-admin.ts`, role admin, screenshot: module-7-seed-admin.png |
+| **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `IN PROCESS` | 3 tasks | `bearerAuth`, response 401/403 |
 | **M09** | Kiểm thử Toàn diện 24 Ca Test Postman | `TODO` | 3 tasks | A01–A12, B01–B12 |
 | **M10** | Tổng kết, Báo cáo & Trả lời 8 câu hỏi | `TODO` | 3 tasks | `test-results.md`, `prompt-log.md` |
 
@@ -79,8 +79,8 @@
 ---
 
 ### 🔹 Module 7: Tạo Tài khoản Admin Môi trường Dev (Seed Admin)
-* [ ] **Task 7.1**: Viết script `src/scripts/seed-admin.ts` kiểm tra tài khoản admin trong CSDL, băm mật khẩu và tạo user với `role: 'admin'`.
-* [ ] **Task 7.2**: Thêm lệnh `"seed:admin": "tsx src/scripts/seed-admin.ts"` vào `package.json`, chạy thử nghiệm và xác nhận tài khoản admin tồn tại trong SQL Server.
+* [x] **Task 7.1**: Viết script `src/scripts/seed-admin.ts` kiểm tra tài khoản admin trong CSDL, băm mật khẩu và tạo user với `role: 'admin'`.
+* [x] **Task 7.2**: Thêm lệnh `"seed:admin": "tsx src/scripts/seed-admin.ts"` vào `package.json`, chạy thử nghiệm và xác nhận tài khoản admin tồn tại trong SQL Server.
 
 ---
 
