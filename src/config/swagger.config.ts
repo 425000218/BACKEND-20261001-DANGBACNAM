@@ -18,5 +18,6 @@ if (
   throw new Error("OpenAPI YAML thiếu cấu trúc bắt buộc");
 }
 
+// Reload swagger spec from docs/openapi.yaml
 export const swaggerSpec = value as unknown as OpenAPIV3.Document;
 
