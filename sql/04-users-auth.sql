@@ -33,10 +33,10 @@ BEGIN
 END
 GO
 
--- 2. Cấp quyền truy cập tối thiểu cho tài khoản sv_app
--- Cần SELECT (tra cứu lúc login), INSERT (thêm lúc register) trên bảng Users
-GRANT SELECT, INSERT ON dbo.Users TO sv_app;
-PRINT N'Đã cấp quyền SELECT và INSERT trên bảng dbo.Users cho sv_app.';
+-- 2. Cấp quyền truy cập cho tài khoản sv_app
+-- Cần SELECT (tra cứu lúc login), INSERT (thêm lúc register), UPDATE (seed/cập nhật) trên bảng Users
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Users TO sv_app;
+PRINT N'Đã cấp quyền SELECT, INSERT, UPDATE, DELETE trên bảng dbo.Users cho sv_app.';
 GO
 
 -- 3. Câu lệnh xác minh cấu trúc bảng dbo.Users

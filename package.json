@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "check:db": "tsx src/scripts/check-db.ts",
-    "check:relation": "tsx src/scripts/check-relation.ts"
+    "check:relation": "tsx src/scripts/check-relation.ts",
+    "seed:admin": "tsx src/scripts/seed-admin.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
