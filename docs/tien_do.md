@@ -22,7 +22,7 @@
 | **M07** | Tạo tài khoản Admin môi trường Dev | `DONE` | 2 tasks | `seed-admin.ts`, role admin, screenshot: module-7-seed-admin.png |
 | **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `DONE` | 3 tasks | `bearerAuth`, response 401/403, screenshot: module-8-swagger.png |
 | **M09** | Kiểm thử Toàn diện 24 Ca Test Postman | `DONE` | 3 tasks | A01–A12, B01–B12 (24/24 ĐẠT 100%), Postman JSON |
-| **M10** | Tổng kết, Báo cáo & Trả lời 8 câu hỏi | `IN PROCESS` | 3 tasks | `test-results.md`, `prompt-log.md` |
+| **M10** | Tổng kết, Báo cáo & Trả lời 8 câu hỏi | `DONE` | 3 tasks | `prompt-log.md`, trả lời 8 câu hỏi, `test-results.md` |
 
 ---
 
@@ -99,6 +99,13 @@
 ---
 
 ### 🔹 Module 10: Tổng kết, Báo cáo & Trả lời 8 Câu hỏi Bảo vệ Bài
-* [ ] **Task 10.1**: Cập nhật nhật ký Vibe Coding trong `docs/prompt-log.md`.
-* [ ] **Task 10.2**: Soạn thảo câu trả lời chi tiết cho 8 câu hỏi bảo vệ bài thực hành (trang 21).
-* [ ] **Task 10.3**: Tổng hợp hồ sơ nộp bài hoàn chỉnh theo rubric chấm điểm 10/10 của giáo trình.
+* [x] **Task 10.1**: Cập nhật nhật ký Vibe Coding trong `docs/prompt-log.md`.
+* [x] **Task 10.2**: Soạn thảo câu trả lời chi tiết cho 8 câu hỏi bảo vệ bài thực hành (trang 21).
+* [x] **Task 10.3**: Tổng hợp hồ sơ nộp bài hoàn chỉnh theo rubric chấm điểm 10/10 của giáo trình.
+
+---
+
+## 🏆 KẾT QUẢ CUỐI CÙNG
+- **11/11 Module hoàn thành xuất sắc (M00 đến M10)**
+- **24/24 Ca kiểm thử tự động đạt 100% (A01–A12, B01–B12)**
+- **Hệ thống chạy mượt mà, phân quyền RBAC chặt chẽ, tài liệu OpenAPI & Postman đầy đủ**
