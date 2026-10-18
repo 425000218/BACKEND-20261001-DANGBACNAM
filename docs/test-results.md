@@ -1,46 +1,79 @@
-# Báo Cáo Kết Quả Kiểm Thử (12 Test Cases) - Buổi 5
-## Dự án: Quản lý sinh viên - RESTful CRUD & Swagger UI
+# BÁO CÁO KẾT QUẢ KIỂM THỬ TOÀN DIỆN (TEST-RESULTS.MD)
+## CHƯƠNG 06: AUTHENTICATION & AUTHORIZATION (JWT · MIDDLEWARE · PHÂN QUYỀN RBAC)
 
-* **Môi trường thực hiện**: Windows, Node.js v24, Express 5, TypeScript ESM, Sequelize 6, SQL Server local.
-* **Cơ sở dữ liệu**: `QuanLySinhVienDB` (SQL Server), bảng `dbo.SinhVien`.
-* **Cổng dịch vụ**: `http://localhost:5000`
-* **Công cụ kiểm thử**: Postman Desktop v2.1 & Swagger UI (`/api-docs`).
-
----
-
-## 1. Bảng tổng hợp kết quả 12 test cases bắt buộc
-
-| ID | Điều kiện / Thao tác | Method & URL | Body gửi lên | Status kỳ vọng | Status thực tế | Kết quả | GET kiểm chứng / Ghi chú |
-|---|---|---|---|---|---|---|---|
-| **T01** | Lấy danh sách ban đầu | `GET /api/v1/sinh-vien` | *None* | 200 | 200 | **PASS** | `data` là mảng (gồm các SV mẫu `SV001`, `SV002`). |
-| **T02** | Thêm mới `SV003` hợp lệ | `POST /api/v1/sinh-vien` | `{"maSV":"SV003","hoTen":"Ngọc Mai","email":"ngocmai@example.com","maLop":"25CT114"}` | 201 | 201 | **PASS** | `data.maSV` = `"SV003"`. Chuẩn bị cho các test tiếp theo. |
-| **T03** | Thêm lại `SV003` lần 2 (Trùng mã) | `POST /api/v1/sinh-vien` | `{"maSV":"SV003","hoTen":"Ngọc Mai","email":"ngocmai@example.com","maLop":"25CT114"}` | 409 | 409 | **PASS** | Bị từ chối bởi Primary Key SQL Server: `"Mã sinh viên đã tồn tại"`. |
-| **T04** | Thêm mã mới nhưng thiếu `hoTen` | `POST /api/v1/sinh-vien` | `{"maSV":"SV004","email":"thunghiem@example.com","maLop":"25CT114"}` | 400 | 400 | **PASS** | Validation chặn: không tạo bản ghi rác trong CSDL. |
-| **T05** | Xem chi tiết `SV003` sau khi tạo | `GET /api/v1/sinh-vien/SV003` | *None* | 200 | 200 | **PASS** | Đọc thấy đủ 4 trường từ SQL Server: `maSV`, `hoTen`, `email`, `maLop`. |
-| **T06** | Cập nhật `SV003` đủ 3 trường hợp lệ | `PUT /api/v1/sinh-vien/SV003` | `{"hoTen":"Ngọc Mai Updated","email":"ngocmai@example.com","maLop":"25CT114"}` | 200 | 200 | **PASS** | GET lại xác nhận: `hoTen` đã đổi thành `"Ngọc Mai Updated"`. |
-| **T07** | Cập nhật `SV003` thiếu trường `email` | `PUT /api/v1/sinh-vien/SV003` | `{"hoTen":"Ngọc Mai Changed","maLop":"25CT114"}` | 400 | 400 | **PASS** | Bị từ chối. GET lại kiểm chứng: dữ liệu cũ của `SV003` vẫn được bảo toàn. |
-| **T08** | Cập nhật mã `SV9999` không tồn tại | `PUT /api/v1/sinh-vien/SV9999` | `{"hoTen":"Non Existing","email":"non@example.com","maLop":"25CT114"}` | 404 | 404 | **PASS** | Báo lỗi `"Không tìm thấy sinh viên"`, không sinh thêm mã mới. |
-| **T09** | Tìm kiếm mã `SV9999` không có | `GET /api/v1/sinh-vien/SV9999` | *None* | 404 | 404 | **PASS** | Phản hồi `{"success":false,"message":"Không tìm thấy sinh viên"}`. |
-| **T10** | Xóa sinh viên `SV003` | `DELETE /api/v1/sinh-vien/SV003` | *None* | 200 | 200 | **PASS** | Phản hồi `{"success":true,"message":"Xóa sinh viên thành công"}` (không có `data`). |
-| **T11** | Kiểm chứng `SV003` sau khi xóa | `GET /api/v1/sinh-vien/SV003` | *None* | 404 | 404 | **PASS** | **Chứng minh bản ghi đã thực sự bị xóa khỏi SQL Server**. |
-| **T12** | Xóa lại `SV003` lần 2 | `DELETE /api/v1/sinh-vien/SV003` | *None* | 404 | 404 | **PASS** | Trả về 404 hợp lệ vì bản ghi không còn tồn tại trong hệ thống. |
+Dự án: **backend-quan-ly-sinh-vien**  
+Sinh viên thực hiện: **Đặng Bắc Nam**  
+Thời điểm kiểm thử: **2026-10-18**  
+Công cụ kiểm thử: **Automated TypeScript Test Runner (`pnpm run test:24`), Postman Collection v2.1, Playwright MCP**
 
 ---
 
-## 2. Chi tiết và Phân tích chuyên sâu từng ca kiểm thử
+## 📊 1. TỔNG QUAN KẾT QUẢ KIỂM THỬ
 
-### Ca kiểm thử T06 & T07 (Quy tắc nghiệp vụ PUT)
-* **T06**: Khi gửi request `PUT /api/v1/sinh-vien/SV003` với đầy đủ 3 trường hợp lệ (`hoTen`, `email`, `maLop`), server cập nhật thông tin trong SQL Server và trả về status `200 OK`. 
-* **T07**: Khi gửi PUT thiếu trường `email`, server lập tức bắt lỗi tại tầng Service validation và trả về `400 Bad Request`. Tiếp tục gọi `GET /api/v1/sinh-vien/SV003` kiểm chứng lại thì thấy họ tên của sinh viên không bị thay đổi thành `"Ngọc Mai Changed"`, chứng minh nghiệp vụ bảo toàn dữ liệu khi có lỗi xảy ra.
-
-### Ca kiểm thử T10, T11 & T12 (Quy tắc nghiệp vụ DELETE)
-* **T10**: Gửi `DELETE /api/v1/sinh-vien/SV003`, server thực hiện lệnh xóa trong database và trả về status `200 OK` cùng thông báo `"Xóa sinh viên thành công"`.
-* **T11**: **Đây là bước kiểm chứng quan trọng nhất**. Gọi tiếp `GET /api/v1/sinh-vien/SV003`, kết quả trả về `404 Not Found`. Điều này chứng minh rằng dữ liệu đã thực sự được xóa khỏi CSDL SQL Server chứ không phải chỉ là phản hồi JSON giả mạo.
-* **T12**: Gọi lại `DELETE /api/v1/sinh-vien/SV003` lần thứ hai, server trả về `404 Not Found`. Đây là kết quả **PASS** hoàn toàn chính xác theo nguyên tắc thiết kế RESTful API (tài nguyên không còn tồn tại để xóa).
+| Chỉ số | Giá trị | Tỷ lệ |
+|---|:---:|:---:|
+| **Tổng số ca kiểm thử** | **24** | 100% |
+| **Số ca kiểm thử ĐẠT (Passed)** | **24** | **100.0%** |
+| **Số ca kiểm thử HỎNG (Failed)** | **0** | **0.0%** |
+| **Nhóm A: Xác thực tài khoản (Auth)** | **12 / 12** | 100% |
+| **Nhóm B: Phân quyền RBAC & CRUD SinhVien** | **12 / 12** | 100% |
 
 ---
 
-## 3. Kết luận
-* Toàn bộ 12 ca kiểm thử đều đạt kết quả **PASS 100%**.
-* Hệ thống xử lý chính xác các mã trạng thái HTTP chuẩn mực: `200`, `201`, `400`, `404`, `409`.
-* Dữ liệu được lưu trữ và thao tác trực tiếp trên CSDL SQL Server, đảm bảo tính toàn vẹn và nhất quán.
+## 📋 2. MA TRẬN CHI TIẾT 24 CA KIỂM THỬ
+
+### 🔹 Nhóm A: Xác thực tài khoản (Authentication - A01 đến A12)
+
+| Mã Ca | Tên Ca Kiểm Thử | Tuyến đường (Endpoint) | HTTP Kỳ vọng | HTTP Thực tế | Đạt/Không | Chi tiết & Ghi chú kiểm thử |
+|:---:|---|---|:---:|:---:|:---:|---|
+| **A01** | Đăng ký tài khoản mới hợp lệ | `POST /api/auth/register` | **201** | **201** | ✅ ĐẠT | Trả về 201 Created, `role: 'student'` mặc định, password được băm bằng bcrypt cost factor 12, không để lộ `passwordHash` trong response. |
+| **A02** | Đăng ký với email đã tồn tại | `POST /api/auth/register` | **409** | **409** | ✅ ĐẠT | Bắt trùng email trong CSDL, trả về 409 Conflict với thông điệp: `"Email đã được sử dụng"`. |
+| **A03** | Đăng ký cố tình gán role admin | `POST /api/auth/register` | **400** | **400** | ✅ ĐẠT | Ngăn chặn tấn công leo thang đặc quyền (Privilege Escalation), từ chối khi client truyền `role`, trả về 400 Bad Request. |
+| **A04** | Đăng nhập thông tin chính xác | `POST /api/auth/login` | **200** | **200** | ✅ ĐẠT | Trả về 200 OK kèm payload `{ accessToken, tokenType: "Bearer", expiresIn: 3600 }`. Token ký bằng HS256 với secret chuẩn. |
+| **A05** | Đăng nhập sai mật khẩu | `POST /api/auth/login` | **401** | **401** | ✅ ĐẠT | bcrypt so sánh trả về false, trả về 401 Unauthorized kèm thông báo chung `"Email hoặc mật khẩu không chính xác"` (chống enumeration). |
+| **A06** | Đăng nhập email không tồn tại | `POST /api/auth/login` | **401** | **401** | ✅ ĐẠT | Không tìm thấy email, trả về cùng mã 401 và cùng thông báo lỗi chung như ca A05 để không để lộ sự tồn tại của email. |
+| **A07** | Xem hồ sơ không gửi Header Authorization | `GET /api/auth/profile` | **401** | **401** | ✅ ĐẠT | Middleware `isAuth` phát hiện thiếu header `Authorization`, chặn và trả về 401: `"Yêu cầu Bearer token để xác thực"`. |
+| **A08** | Xem hồ sơ header sai định dạng | `GET /api/auth/profile` | **401** | **401** | ✅ ĐẠT | Gửi `Basic ...` hoặc không có tiền tố `Bearer `, `isAuth` chặn với 401: `"Định dạng Authorization header không hợp lệ"`. |
+| **A09** | Xem hồ sơ với Token giả mạo/chữ ký sai | `GET /api/auth/profile` | **401** | **401** | ✅ ĐẠT | Chữ ký số không khớp với `JWT_SECRET`, `verifyToken` ném lỗi và trả về 401: `"Token không hợp lệ hoặc sai chữ ký"`. |
+| **A10** | Xem hồ sơ với Token đã hết hạn | `GET /api/auth/profile` | **401** | **401** | ✅ ĐẠT | Gửi token có `exp` nhỏ hơn thời điểm hiện tại, `verifyToken` phát hiện hết hạn và trả về 401: `"Token đã hết hạn sử dụng"`. |
+| **A11** | Xem hồ sơ với Token hợp lệ | `GET /api/auth/profile` | **200** | **200** | ✅ ĐẠT | `isAuth` giải mã gán `req.user`, trả về 200 OK với thông tin profile: `id`, `fullName`, `email`, `role`, tuyệt đối không lộ hash. |
+| **A12** | Đăng ký thiếu trường bắt buộc | `POST /api/auth/register` | **400** | **400** | ✅ ĐẠT | Thiếu fullName hoặc password, validation chặn và trả về 400 Bad Request. |
+
+---
+
+### 🔹 Nhóm B: Phân quyền RBAC & CRUD SinhVien (B01 đến B12)
+
+| Mã Ca | Tên Ca Kiểm Thử | Tuyến đường (Endpoint) | HTTP Kỳ vọng | HTTP Thực tế | Đạt/Không | Chi tiết & Ghi chú kiểm thử |
+|:---:|---|---|:---:|:---:|:---:|---|
+| **B01** | GET danh sách sinh viên (Public) | `GET /api/v1/sinh-vien` | **200** | **200** | ✅ ĐẠT | Tuyến đường công khai, truy cập thành công trả về mảng danh sách sinh viên mà không yêu cầu Bearer token. |
+| **B02** | GET chi tiết sinh viên theo mã (Public) | `GET /api/v1/sinh-vien/SV001` | **200** | **200** | ✅ ĐẠT | Tuyến đường công khai, xem thông tin sinh viên `SV001` thành công không cần token. |
+| **B03** | POST thêm sinh viên không gửi Token | `POST /api/v1/sinh-vien` | **401** | **401** | ✅ ĐẠT | Middleware `isAuth` bảo vệ route POST, chặn người dùng chưa đăng nhập với 401 Unauthorized. |
+| **B04** | PUT cập nhật sinh viên không gửi Token | `PUT /api/v1/sinh-vien/SV001` | **401** | **401** | ✅ ĐẠT | Middleware `isAuth` bảo vệ route PUT, chặn người dùng chưa đăng nhập với 401 Unauthorized. |
+| **B05** | DELETE xóa sinh viên không gửi Token | `DELETE /api/v1/sinh-vien/SV001` | **401** | **401** | ✅ ĐẠT | Middleware `isAuth` bảo vệ route DELETE, chặn người dùng chưa đăng nhập với 401 Unauthorized. |
+| **B06** | POST thêm sinh viên với Token Student | `POST /api/v1/sinh-vien` | **403** | **403** | ✅ ĐẠT | Vượt qua `isAuth` nhưng bị `isAdmin` chặn với 403 Forbidden: `"Yêu cầu quyền Quản trị viên (admin)"`. |
+| **B07** | PUT cập nhật sinh viên với Token Student | `PUT /api/v1/sinh-vien/SV001` | **403** | **403** | ✅ ĐẠT | Sinh viên không có quyền chỉnh sửa, bị `isAdmin` chặn với 403 Forbidden. |
+| **B08** | DELETE xóa sinh viên với Token Student | `DELETE /api/v1/sinh-vien/SV001` | **403** | **403** | ✅ ĐẠT | Sinh viên không có quyền xóa dữ liệu, bị `isAdmin` chặn với 403 Forbidden. |
+| **B09** | POST thêm sinh viên với Token Admin | `POST /api/v1/sinh-vien` | **201** | **201** | ✅ ĐẠT | Tài khoản Admin thực hiện thêm mới sinh viên `SV088` thành công, lưu vào SQL Server và trả về 201 Created. |
+| **B10** | POST thêm sinh viên trùng mã (Admin) | `POST /api/v1/sinh-vien` | **409** | **409** | ✅ ĐẠT | Admin thêm lại sinh viên `SV088` đã tồn tại, hệ thống báo lỗi 409 Conflict: `"Mã sinh viên đã tồn tại"`. |
+| **B11** | PUT cập nhật sinh viên với Token Admin | `PUT /api/v1/sinh-vien/SV088` | **200** | **200** | ✅ ĐẠT | Admin cập nhật họ tên, email thành công, trả về 200 OK. |
+| **B12** | DELETE xóa sinh viên với Token Admin | `DELETE /api/v1/sinh-vien/SV088` | **200** | **200** | ✅ ĐẠT | Admin thực hiện xóa bản ghi sinh viên `SV088` thành công, trả về 200 OK. |
+
+---
+
+## 📸 3. DANH SÁCH ẢNH CHỤP MINH CHỨNG THEO TỪNG MODULE
+
+1. **Khởi tạo giao diện trực quan**: [`docs/screenshots/module-0-client.png`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/module-0-client.png)
+2. **Đăng ký tài khoản (201 & 409)**: [`docs/screenshots/module-3-register.png`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/module-3-register.png)
+3. **Đăng nhập & Nhận JWT (200)**: [`docs/screenshots/module-4-login.png`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/module-4-login.png)
+4. **Xem Hồ sơ bảo vệ bằng `isAuth` (200)**: [`docs/screenshots/module-5-profile.png`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/module-5-profile.png)
+5. **Sinh viên bị chặn quyền ghi (403 Forbidden)**: [`docs/screenshots/module-6-rbac.png`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/module-6-rbac.png)
+6. **Admin thực hiện thêm sinh viên (201 Created)**: [`docs/screenshots/module-7-seed-admin.png`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/module-7-seed-admin.png)
+7. **Tài liệu Swagger OpenAPI 3.0 với BearerAuth**: [`docs/screenshots/module-8-swagger.png`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/module-8-swagger.png)
+
+---
+
+## 🎯 4. KẾT LUẬN
+Hệ thống backend đáp ứng đầy đủ và vượt trội các tiêu chí kiểm thử của Chương 06:
+- Tỷ lệ vượt qua kiểm thử: **24/24 ca kiểm thử ĐẠT (100%)**.
+- Bảo mật: Băm bcrypt cost 12, JWT HS256 hạn 1 giờ, chống Privilege Escalation, chống Email Enumeration, phân quyền Role-Based Access Control chặt chẽ.
+- Tài liệu kiểm thử: Đầy đủ Postman Collection JSON, OpenAPI 3.0 YAML, test runner tự động `pnpm run test:24`.
