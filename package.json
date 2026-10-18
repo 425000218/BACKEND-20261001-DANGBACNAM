@@ -10,7 +10,8 @@
     "check:db": "tsx src/scripts/check-db.ts",
     "check:relation": "tsx src/scripts/check-relation.ts",
     "seed:admin": "tsx src/scripts/seed-admin.ts",
-    "test:24": "tsx src/scripts/run-24-tests.ts"
+    "test:24": "tsx src/scripts/run-24-tests.ts",
+    "report:pdf": "tsx src/scripts/generate-chapter6-pdf.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
