@@ -229,8 +229,8 @@ async function generateChapter06Report() {
                       }),
                       new Paragraph({
                         children: [
-                          new TextRun({ text: '• Kết quả kiểm thử: ', bold: true, size: 21, color: primaryColor }),
-                          new TextRun({ text: 'ĐẠT 24/24 ca kiểm thử tự động (Tỷ lệ: 100.0%)', bold: true, size: 21, color: accentColor }),
+                          new TextRun({ text: '• Kiểm thử API: ', bold: true, size: 21, color: primaryColor }),
+                          new TextRun({ text: 'Bộ kịch bản Postman Collection (24 ca kiểm thử theo Giáo trình)', size: 21 }),
                         ],
                       }),
                       new Paragraph({
@@ -478,13 +478,13 @@ async function generateChapter06Report() {
             heading: HeadingLevel.HEADING_1,
             spacing: { before: 240, after: 120 },
             children: [
-              new TextRun({ text: '4. Kết quả Nghiệm thu Ma trận 24 Ca Kiểm thử Tự động', bold: true, size: 26, color: primaryColor }),
+              new TextRun({ text: '4. Kết quả Nghiệm thu Bộ Ca Kiểm thử Postman (Nhóm A & Nhóm B)', bold: true, size: 26, color: primaryColor }),
             ],
           }),
           new Paragraph({
             children: [
               new TextRun(
-                'Toàn bộ 24 ca test (Nhóm A: A01–A12 cho Auth/JWT; Nhóm B: B01–B12 cho RBAC SinhVien) được thực thi tự động qua test runner pnpm test:24. Kết quả đạt tỷ lệ tuyệt đối 100.0% (24/24 ca ĐẠT):'
+                'Bộ kịch bản kiểm thử Postman Collection (postman/Chuong06-Auth-RBAC.postman_collection.json) bao gồm đầy đủ 24 ca kiểm thử chuẩn xác theo yêu cầu Giáo trình Chương 06 (Nhóm A: A01–A12 cho Auth & JWT; Nhóm B: B01–B12 cho Phân quyền RBAC SinhVien):'
               ),
             ],
           }),
@@ -534,38 +534,43 @@ async function generateChapter06Report() {
             heading: HeadingLevel.HEADING_1,
             spacing: { before: 240, after: 120 },
             children: [
-              new TextRun({ text: '5. Hình ảnh Minh chứng Thực tế (Visual Evidence)', bold: true, size: 26, color: primaryColor }),
+              new TextRun({ text: '5. Hình ảnh Minh chứng Thực tế Kiểm thử bằng Postman (Postman Test Screenshots)', bold: true, size: 26, color: primaryColor }),
             ],
           }),
 
           ...insertImageWithCaption(
+            'docs/screenshots/postman-01-register-201.png',
+            'Kiểm thử Postman Ca A01: Đăng ký tài khoản (Register) - Trả về HTTP 201 Created'
+          ),
+
+          ...insertImageWithCaption(
+            'docs/screenshots/postman-02-login-200.png',
+            'Kiểm thử Postman Ca A04: Đăng nhập (Login) - Cấp Access Token JWT (Bearer, 3600s)'
+          ),
+
+          ...insertImageWithCaption(
+            'docs/screenshots/postman-03-profile-200.png',
+            'Kiểm thử Postman Ca A07: Xem hồ sơ cá nhân (Profile) với Header Authorization Bearer Token'
+          ),
+
+          ...insertImageWithCaption(
+            'docs/screenshots/postman-04-sinhvien-401-unauth.png',
+            'Kiểm thử Postman Ca B03: Thao tác ghi không gửi Token - isAuth chặn mã 401 Unauthorized'
+          ),
+
+          ...insertImageWithCaption(
+            'docs/screenshots/postman-05-sinhvien-403-student.png',
+            'Kiểm thử Postman Ca B06: Thêm sinh viên với Token Student - isAdmin chặn mã 403 Forbidden'
+          ),
+
+          ...insertImageWithCaption(
+            'docs/screenshots/postman-06-sinhvien-201-admin.png',
+            'Kiểm thử Postman Ca B09: Thêm sinh viên với Token Admin - Thực thi thành công trả về 201 Created'
+          ),
+
+          ...insertImageWithCaption(
             'docs/screenshots/module-8-swagger.png',
-            'Swagger UI OpenAPI 3.0 tích hợp đầy đủ 3 API Auth và Bearer Auth Authorize'
-          ),
-
-          ...insertImageWithCaption(
-            'docs/screenshots/module-3-register.png',
-            'Kiểm thử API Register trả về HTTP 201 Created và không lộ trường passwordHash'
-          ),
-
-          ...insertImageWithCaption(
-            'docs/screenshots/module-4-login.png',
-            'Kiểm thử API Login trả về HTTP 200 OK kèm Bearer Access Token thời hạn 3600 giây'
-          ),
-
-          ...insertImageWithCaption(
-            'docs/screenshots/module-5-profile.png',
-            'Kiểm thử API Profile trả về thông tin người dùng khi Bearer Token hợp lệ'
-          ),
-
-          ...insertImageWithCaption(
-            'docs/screenshots/module-6-rbac.png',
-            'Kiểm thử Phân quyền RBAC: Chặn 403 Forbidden với sinh viên và Chấp thuận 201 với Quản trị viên'
-          ),
-
-          ...insertImageWithCaption(
-            'docs/screenshots/module-7-seed-admin.png',
-            'Khởi tạo tài khoản Quản trị viên Admin Dev và kiểm tra cấu trúc bảng dbo.Users trong SQL Server'
+            'Tài liệu đặc tả API OpenAPI 3.0 (Swagger UI) tích hợp xác thực Bearer Auth'
           ),
 
           // -------------------------------------------------------------
@@ -842,12 +847,18 @@ try {
   try {
     execSync(`powershell -ExecutionPolicy Bypass -File "${psScriptPath}"`, { stdio: 'inherit' });
     if (fs.existsSync(pdfOutputPath)) {
-      fs.copyFileSync(pdfOutputPath, rootPdfPath);
       console.log(`🎉 ĐÃ XUẤT FILE PDF THÀNH CÔNG TẠI:`);
       console.log(`   1. ${pdfOutputPath}`);
-      console.log(`   2. ${rootPdfPath}`);
+      try {
+        fs.copyFileSync(pdfOutputPath, rootPdfPath);
+        console.log(`   2. ${rootPdfPath}`);
+      } catch (copyErr: any) {
+        console.log(`   ℹ️ File tại thư mục gốc đang được mở xem: ${rootPdfPath} (Đã cập nhật bản mới nhất tại docs/)`);
+      }
     }
-    fs.unlinkSync(psScriptPath);
+    if (fs.existsSync(psScriptPath)) {
+      fs.unlinkSync(psScriptPath);
+    }
   } catch (err) {
     console.warn('⚠️ Lỗi khi chạy script xuất PDF:', err);
   }

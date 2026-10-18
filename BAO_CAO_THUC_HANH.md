@@ -160,8 +160,8 @@ Client Request (Header: Authorization: Bearer <token>)
 
 ### 4. Bảng Kết Quả Kiểm Thử Toàn Diện 24 Ca Test (A01 - A12, B01 - B12)
 
-Kịch bản thực thi tự động: `pnpm test:24` (hoặc `npm run test:24`).  
-Kết quả nghiệm thu: **24 / 24 ca test ĐẠT (Tỷ lệ: 100.0%)**.
+Kịch bản kiểm thử: Bộ sưu tập Postman Collection `postman/Chuong06-Auth-RBAC.postman_collection.json`.  
+Kết quả nghiệm thu: **Đầy đủ 24 ca kiểm thử chuẩn xác theo Giáo trình Chương 06**.
 
 | Mã Ca | Nhóm | Tên ca kiểm thử | Method & Endpoint | Status kỳ vọng | Status thực tế | Kết quả | Ghi chú an toàn & Ý nghĩa |
 |:---:|---|---|---|:---:|:---:|:---:|---|
