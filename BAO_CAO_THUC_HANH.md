@@ -258,14 +258,4 @@ Quá trình phối hợp Vibe Coding cùng AI đòi hỏi sinh viên phải rà 
 * Khi `isAuth` thực thi thành công, nó gán thuộc tính trực tiếp vào đối tượng này: `req.user = { id: payload.sub, role: payload.role }` rồi gọi `next()`.
 * Middleware tiếp theo trong chuỗi (`isAdmin`) nhận cùng đối tượng `req` đó và có thể đọc trực tiếp `req.user.role`. Để TypeScript không báo lỗi thiếu thuộc tính, dự án đã tạo file mở rộng kiểu dữ liệu [`src/types/express.d.ts`](file:///d:/BACKEND-20261001-DANGBACNAM/src/types/express.d.ts) khai báo bổ sung trường `user?: IUserAuth` vào namespace `Express.Request`.
 
----
 
-### 7. Đánh Giá Theo Barem Rubric Chấm Điểm (10/10 Điểm)
-
-| Tiêu chí đánh giá | Điểm tối đa | Minh chứng nghiệm thu thực tế trong dự án | Đánh giá |
-|---|:---:|---|:---:|
-| **1. Register/Login + SQL Server + bcrypt** | **3.0** | Mã phản hồi 201/409/200/401 chuẩn xác, mật khẩu băm `bcrypt` cost 12, bảng `dbo.Users` có UNIQUE email, không lộ hash. | 🏆 **3.0 / 3.0** |
-| **2. JWT & Middleware isAuth / isAdmin** | **3.0** | JWT HS256 hạn 1h; `isAuth` bắt 401 khi thiếu/sai/hết hạn token; `isAdmin` bắt 403 khi dùng role student; Admin gọi thành công. | 🏆 **3.0 / 3.0** |
-| **3. Tích hợp API + Swagger + Postman** | **2.0** | Giữ nguyên 5 API SinhVien cũ không lỗi; Swagger UI có Bearer Auth; Postman Collection đầy đủ 24 ca test A01-A12, B01-B12 ĐẠT 100%. | 🏆 **2.0 / 2.0** |
-| **4. Prompt Log, Security Review & 8 Câu hỏi** | **2.0** | Nhật ký prompt theo cấu trúc CTCO; bảng Security Review nhận diện 6 lỗ hổng; trả lời chi tiết, chuẩn xác toàn bộ 8 câu hỏi bảo vệ. | 🏆 **2.0 / 2.0** |
-| **TỔNG ĐIỂM DỰ KIẾN** | **10.0** | **Hoàn thành xuất sắc và toàn diện mọi yêu cầu của Giáo trình** | 🌟 **10.0 / 10.0** |

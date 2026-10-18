@@ -747,60 +747,6 @@ async function generateChapter06Report() {
             ],
           }),
 
-          // -------------------------------------------------------------
-          // MỤC 8: BẢNG BAREM RUBRIC CHẤM ĐIỂM
-          // -------------------------------------------------------------
-          new Paragraph({
-            heading: HeadingLevel.HEADING_1,
-            spacing: { before: 240, after: 120 },
-            children: [
-              new TextRun({ text: '8. Đánh giá Theo Barem Rubric Chấm Điểm (10.0 / 10.0 Điểm)', bold: true, size: 26, color: primaryColor }),
-            ],
-          }),
-
-          new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            borders: tableBorders,
-            rows: [
-              makeRow([
-                { text: 'Tiêu chí đánh giá', width: 30, isHeader: true },
-                { text: 'Điểm tối đa', width: 15, isHeader: true },
-                { text: 'Minh chứng nghiệm thu thực tế', width: 40, isHeader: true },
-                { text: 'Đánh giá', width: 15, isHeader: true },
-              ]),
-              makeRow([
-                { text: '1. Register/Login + SQL Server + bcrypt', width: 30, bold: true },
-                { text: '3.0', width: 15, align: AlignmentType.CENTER, bold: true },
-                { text: 'Mã 201/409/200/401 chuẩn xác, CSDL lưu hash cost 12, không lộ hash', width: 40 },
-                { text: '3.0 / 3.0', width: 15, align: AlignmentType.CENTER, bold: true, color: accentColor },
-              ]),
-              makeRow([
-                { text: '2. JWT & Middleware isAuth / isAdmin', width: 30, bold: true },
-                { text: '3.0', width: 15, align: AlignmentType.CENTER, bold: true },
-                { text: 'HS256 hạn 1h, isAuth bắt 401 khi thiếu/sai/hết hạn, isAdmin bắt 403 với student', width: 40 },
-                { text: '3.0 / 3.0', width: 15, align: AlignmentType.CENTER, bold: true, color: accentColor },
-              ]),
-              makeRow([
-                { text: '3. Tích hợp API + Swagger + Postman', width: 30, bold: true },
-                { text: '2.0', width: 15, align: AlignmentType.CENTER, bold: true },
-                { text: 'CRUD không hồi quy, Swagger có Bearer Auth, Postman 24 ca test đạt 100%', width: 40 },
-                { text: '2.0 / 2.0', width: 15, align: AlignmentType.CENTER, bold: true, color: accentColor },
-              ]),
-              makeRow([
-                { text: '4. Prompt Log, Security Review & 8 Câu hỏi', width: 30, bold: true },
-                { text: '2.0', width: 15, align: AlignmentType.CENTER, bold: true },
-                { text: 'Log chuẩn CTCO, nhận diện 6 lỗ hổng, trả lời xuất sắc 8 câu hỏi bảo vệ', width: 40 },
-                { text: '2.0 / 2.0', width: 15, align: AlignmentType.CENTER, bold: true, color: accentColor },
-              ]),
-              makeRow([
-                { text: 'TỔNG ĐIỂM TOÀN BỘ BÀI THỰC HÀNH', width: 30, bold: true, color: primaryColor },
-                { text: '10.0', width: 15, align: AlignmentType.CENTER, bold: true, color: primaryColor },
-                { text: 'Đạt tuyệt đối mọi tiêu chí cốt lõi của Giáo trình Chương 06', width: 40, bold: true },
-                { text: '10.0 / 10.0 ĐIỂM', width: 15, align: AlignmentType.CENTER, bold: true, color: accentColor },
-              ]),
-            ],
-          }),
-
           new Paragraph({ spacing: { after: 240 } }),
 
           new Paragraph({
