@@ -21,8 +21,8 @@
 | **M06** | Middleware `isAdmin` & Phân quyền SinhVien | `DONE` | 3 tasks | `isAdmin.ts`, khóa POST/PUT/DELETE, screenshot: module-6-rbac.png |
 | **M07** | Tạo tài khoản Admin môi trường Dev | `DONE` | 2 tasks | `seed-admin.ts`, role admin, screenshot: module-7-seed-admin.png |
 | **M08** | Cập nhật Swagger OpenAPI 3.0 YAML | `DONE` | 3 tasks | `bearerAuth`, response 401/403, screenshot: module-8-swagger.png |
-| **M09** | Kiểm thử Toàn diện 24 Ca Test Postman | `IN PROCESS` | 3 tasks | A01–A12, B01–B12 |
-| **M10** | Tổng kết, Báo cáo & Trả lời 8 câu hỏi | `TODO` | 3 tasks | `test-results.md`, `prompt-log.md` |
+| **M09** | Kiểm thử Toàn diện 24 Ca Test Postman | `DONE` | 3 tasks | A01–A12, B01–B12 (24/24 ĐẠT 100%), Postman JSON |
+| **M10** | Tổng kết, Báo cáo & Trả lời 8 câu hỏi | `IN PROCESS` | 3 tasks | `test-results.md`, `prompt-log.md` |
 
 ---
 
@@ -92,9 +92,9 @@
 ---
 
 ### 🔹 Module 9: Kiểm thử Toàn diện 24 Ca Test Postman & Playwright
-* [ ] **Task 9.1**: Cập nhật Collection Postman với đầy đủ 24 ca test (Nhóm A: A01–A12, Nhóm B: B01–B12).
-* [ ] **Task 9.2**: Chạy kiểm thử tự động toàn diện và ghi lại bảng kết quả vào `docs/test-results.md`.
-* [ ] **Task 9.3**: Chụp ảnh minh chứng ít nhất 401, 403, 200, 201, 409 lưu vào `docs/screenshots/`.
+* [x] **Task 9.1**: Cập nhật Collection Postman với đầy đủ 24 ca test (Nhóm A: A01–A12, Nhóm B: B01–B12).
+* [x] **Task 9.2**: Chạy kiểm thử tự động toàn diện và ghi lại bảng kết quả vào `docs/test-results.md`.
+* [x] **Task 9.3**: Chụp ảnh minh chứng ít nhất 401, 403, 200, 201, 409 lưu vào `docs/screenshots/`.
 
 ---
 
