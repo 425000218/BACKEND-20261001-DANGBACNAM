@@ -1,8 +1,9 @@
-# Backend Quản Lý Sinh Viên
+# Backend & Frontend Quản Lý Sinh Viên
 
-> **Hệ thống RESTful API Quản lý Sinh viên & Phân quyền Học vụ**
-> **Chương 06: Authentication & Authorization (JWT · Middleware · Phân quyền RBAC)**
-> **Công nghệ:** Node.js (v20+) · Express 5 · TypeScript (ESM) · SQL Server · Sequelize ORM · JWT · bcrypt · Swagger OpenAPI 3.0
+> **Hệ thống RESTful API Quản lý Sinh viên & Phân quyền Học vụ**  
+> **Chương 06: Authentication & Authorization (JWT · Middleware · Phân quyền RBAC)**  
+> **Chương 07: Upload Hình Ảnh & Kết Nối Frontend – Backend (Multer · Vite · React · Axios · CORS · JWT)**  
+> **Công nghệ:** Node.js (v20+) · Express 5 · TypeScript · SQL Server · Sequelize ORM · JWT · Multer · React 19 · Vite · Axios · Swagger OpenAPI 3.0
 
 ---
 
@@ -50,32 +51,45 @@ Dự án tiếp nối từ Chương 05 (CRUD Sinh viên, Validation, Sequelize t
 ```
 backend-quan-ly-sinh-vien/
 ├── docs/                               # Toàn bộ tài liệu & Báo cáo đồ án
-│   ├── bai_thuc_hanh_chuong_06.md      # Số hóa 21 trang giáo trình PDF & đối chiếu thực tế
-│   ├── openapi.yaml                    # Đặc tả OpenAPI 3.0 có cấu hình Bearer Auth
-│   ├── prompt-log.md                   # Nhật ký AI Vibe Coding & Trả lời 8 câu hỏi bảo vệ
-│   ├── test-results.md                 # Báo cáo kết quả 24 ca test tự động
-│   └── screenshots/                    # Ảnh chụp minh chứng kiểm thử Playwright
+│   ├── bai_thuc_hanh_chuong_06.md      # Số hóa giáo trình PDF Chương 06
+│   ├── bai_thuc_hanh_chuong_07.md      # Số hóa giáo trình PDF Chương 07
+│   ├── openapi.yaml                    # Đặc tả OpenAPI 3.0 có Bearer Auth & Upload Multipart
+│   ├── prompt-log.md                   # Nhật ký AI Vibe Coding & 12 câu hỏi bảo vệ bài
+│   ├── test-results.md                 # Báo cáo kết quả 48 ca test (C6 + C7 ĐẠT 100%)
+│   └── screenshots/                    # Ảnh chụp minh chứng kiểm thử Postman / UI
+├── frontend/                           # [CHƯƠNG 07] Ứng dụng Giao diện Vite + React + TypeScript
+│   ├── src/
+│   │   ├── api/client.ts               # Axios instance cấu hình baseURL
+│   │   ├── components/                 # SinhVienTable, LoginForm, AvatarUpload
+│   │   ├── App.tsx                     # Ứng dụng chính kết nối end-to-end
+│   │   └── main.tsx
+│   ├── .env.example                    # VITE_API_BASE_URL=http://localhost:5000
+│   └── package.json
 ├── postman/                            # Bộ kịch bản Postman Collection
-│   └── Chuong06-Auth-RBAC.postman_collection.json
+│   ├── Chuong06-Auth-RBAC.postman_collection.json
+│   └── Chuong07-Upload-Avatar.postman_collection.json
+├── public/
+│   └── uploads/                        # [CHƯƠNG 07] Lưu trữ ảnh đại diện vật lý (<uuid>.<ext>)
 ├── sql/                                # Kịch bản CSDL SQL Server chạy theo thứ tự
 │   ├── 01-quan-ly-sinh-vien.sql        # Tạo CSDL và bảng SinhVien
 │   ├── 02-seed.sql                     # Dữ liệu sinh viên mẫu
 │   ├── 03-app-login.sql                # Tạo tài khoản sv_app & cấp quyền tối thiểu
 │   ├── 04-lop-va-quan-he.sql           # Bảng Lop & Khóa ngoại
-│   └── 04-users-auth.sql               # [TRỌNG TÂM C6] Tạo bảng Users & cấp quyền cho sv_app
-├── src/                                # Mã nguồn TypeScript
+│   ├── 04-users-auth.sql               # Tạo bảng Users & cấp quyền cho sv_app
+│   └── 05-add-avatar-url.sql           # [CHƯƠNG 07] Bổ sung cột avatarUrl vào dbo.Users
+├── src/                                # Mã nguồn TypeScript Backend
 │   ├── config/                         # Cấu hình CSDL (database.ts) & Swagger (swagger.config.ts)
 │   ├── controllers/                    # Điều phối Request: auth.controller.ts, sinhVien.controller.ts
-│   ├── middlewares/                    # isAuth.ts, isAdmin.ts, error.middleware.ts, logger.middleware.ts
+│   ├── middlewares/                    # isAuth.ts, isAdmin.ts, upload.middleware.ts, error.middleware.ts
 │   ├── models/                         # Sequelize models: User, SinhVien, Lop
 │   ├── routes/                         # Router: auth.routes.ts, sinhVien.routes.ts
-│   ├── scripts/                        # Scripts: seed-admin.ts, run-24-tests.ts, check-db.ts
+│   ├── scripts/                        # Scripts: run-upload-12-tests.ts, run-frontend-12-tests.ts,...
 │   ├── services/                       # Nghiệp vụ: auth.service.ts, sinhVien.service.ts
 │   ├── types/                          # Khai báo mở rộng TypeScript: express.d.ts (req.user)
 │   ├── utils/                          # jwt.ts, AppError.ts
-│   └── server.ts                       # Entry point Express App
+│   └── server.ts                       # Entry point Express App (CORS allowlist & static /uploads)
 ├── setup-sql-server.bat                # Script 1-click tự động cấu hình SQL Server & Seed Admin
-├── setup-sql-server.ps1                # PowerShell script tự động thiết lập CSDL Chương 6
+├── setup-sql-server.ps1                # PowerShell script tự động thiết lập CSDL
 ├── package.json
 ├── pnpm-lock.yaml
 ├── tsconfig.json
@@ -328,13 +342,36 @@ Giao diện trực quan dành cho giảng viên và lập trình viên kiểm th
 Bộ sưu tập Postman Collection đã được tạo sẵn theo chuẩn bài học:
 
 1. Mở ứng dụng **Postman**.
-2. Chọn **Import** $\rightarrow$ Chọn file:
-   ```
-   postman/Chuong06-Auth-RBAC.postman_collection.json
-   ```
+2. Chọn **Import** $\rightarrow$ Chọn các file:
+   - `postman/Chuong06-Auth-RBAC.postman_collection.json` (Kiểm thử 24 ca Auth & RBAC)
+   - `postman/Chuong07-Upload-Avatar.postman_collection.json` (Kiểm thử 12 ca Upload Multer U01-U12)
 3. Trong Collection, kiểm tra biến môi trường `baseUrl`:
    - `baseUrl`: `http://localhost:5000`
-4. Chạy từng request riêng lẻ hoặc chọn **Run Collection** để chạy toàn bộ 24 test case tự động.
+4. Chạy từng request riêng lẻ hoặc chọn **Run Collection** để chạy tự động.
+
+---
+
+### 🚀 Cách 5: [CHƯƠNG 07] Chạy Frontend Vite React & Kiểm thử Tích hợp
+
+1. **Khởi động Backend** (Cổng 5000):
+   ```bash
+   pnpm run dev
+   ```
+
+2. **Khởi động Frontend Vite React** (Cổng 5173):
+   ```bash
+   pnpm run dev:frontend
+   ```
+   Mở trình duyệt truy cập: **`http://localhost:5173`**.
+
+3. **Chạy các bộ kiểm thử tự động Chương 07**:
+   ```bash
+   # Chạy 12 ca kiểm thử Upload Avatar Multer (U01 - U12)
+   pnpm run test:upload
+
+   # Chạy 12 ca kiểm thử Frontend React & CORS (F01 - F12)
+   pnpm run test:frontend
+   ```
 
 ---
 

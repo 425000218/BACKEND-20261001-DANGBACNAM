@@ -1,0 +1,377 @@
+{
+  "info": {
+    "_postman_id": "a90b40e7-380d-40e9-b591-upload07lab01",
+    "name": "Chuong07-Upload-Avatar-Lab",
+    "description": "Bộ kịch bản kiểm thử Postman cho Chương 07: Upload Ảnh Đại Diện & Kiểm soát An toàn File (Multer, Magic Bytes, RBAC)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "studentToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0. Tiền đề - Đăng nhập Student lấy Token",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "var jsonData = pm.response.json();",
+              "if (jsonData.data && jsonData.data.accessToken) {",
+              "    pm.collectionVariables.set(\"studentToken\", jsonData.data.accessToken);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"an.lab@example.com\",\n  \"password\": \"SinhVien@123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "U01 - Upload Avatar PNG hợp lệ (200 OK)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "src": "docs/screenshots/avatar-valid.png",
+              "description": "File ảnh PNG hợp lệ <= 2MB"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U02 - Upload Avatar JPEG hợp lệ (200 OK)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "src": "docs/screenshots/avatar-valid.jpg",
+              "description": "File ảnh JPEG hợp lệ <= 2MB"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U03 - Thiếu Authorization Header (401 Unauthorized)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "src": "docs/screenshots/avatar-valid.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U04 - JWT không hợp lệ hoặc hết hạn (401 Unauthorized)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "invalid.or.expired.jwt.token", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "src": "docs/screenshots/avatar-valid.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U05 - Form-data thiếu file avatar (400 Bad Request)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": []
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U06 - Tên field là photo thay vì avatar (400 Bad Request)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "photo",
+              "type": "file",
+              "src": "docs/screenshots/avatar-valid.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U07 - Kích thước file vượt quá 2MB (413 Payload Too Large)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "src": "docs/screenshots/avatar-oversize.png",
+              "description": "File > 2MB"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U08 - File văn bản giả mạo .png - Magic Bytes (400 Bad Request)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "src": "docs/screenshots/fake-avatar.png",
+              "description": "File text/plain đổi đuôi thành .png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U09 - File đuôi .gif không được chấp nhận (400 Bad Request)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "src": "docs/screenshots/animation.gif"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U10 - Upload liên tiếp 2 lần cùng tài khoản (200 OK - URL mới)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "avatar",
+              "type": "file",
+              "src": "docs/screenshots/avatar-valid.png"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U11 - Client gửi userId trong body - Server chỉ dùng JWT (200 OK)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "avatar", "type": "file", "src": "docs/screenshots/avatar-valid.png" },
+            { "key": "userId", "value": "999", "type": "text" }
+          ]
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me/avatar",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "me", "avatar"]
+        }
+      }
+    },
+    {
+      "name": "U12 - GET Profile xác minh avatarUrl & kiểm tra file tĩnh (200 OK)",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            { "key": "token", "value": "{{studentToken}}", "type": "string" }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "auth", "profile"]
+        }
+      }
+    }
+  ]
+}

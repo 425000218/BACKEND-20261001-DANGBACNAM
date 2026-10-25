@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import bcrypt from 'bcrypt';
 import { User } from '../models/user.model.js';
 import { AppError } from '../utils/AppError.js';
@@ -8,6 +9,7 @@ export interface IUserResponseDTO {
   fullName: string;
   email: string;
   role: string;
+  avatarUrl?: string | null;
 }
 
 /**
@@ -181,5 +183,50 @@ export const getUserProfile = async (userId: string): Promise<IUserResponseDTO> 
     fullName: user.fullName,
     email: user.email,
     role: user.role,
+    avatarUrl: user.avatarUrl ?? null,
   };
 };
+
+/**
+ * Service cập nhật avatarUrl cho User (POST /api/auth/me/avatar)
+ * - Chỉ cập nhật cho tài khoản tương ứng với userId trích xuất từ JWT (không tin userId từ body)
+ * - Nếu cập nhật DB thất bại: xóa ngay file vừa upload để tránh tệp mồ côi
+ */
+export const updateUserAvatar = async (
+  userId: string,
+  filename: string,
+  filePath: string
+): Promise<{ avatarUrl: string }> => {
+  const numericId = parseInt(userId, 10);
+  if (isNaN(numericId)) {
+    // Dọn file vừa upload nếu ID không hợp lệ
+    try {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch {}
+    throw new AppError(400, 'ID người dùng không hợp lệ');
+  }
+
+  const user = await User.findByPk(numericId);
+  if (!user) {
+    // Dọn file vừa upload nếu không tìm thấy User
+    try {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch {}
+    throw new AppError(404, 'Người dùng không tồn tại');
+  }
+
+  const avatarUrl = `/uploads/${filename}`;
+
+  try {
+    await user.update({ avatarUrl });
+  } catch (error) {
+    // Xóa file nếu thao tác ghi vào DB gặp sự cố
+    try {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    } catch {}
+    throw error;
+  }
+
+  return { avatarUrl };
+};
+

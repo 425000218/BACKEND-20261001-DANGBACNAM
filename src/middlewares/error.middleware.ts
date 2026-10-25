@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler } from 'express';
+import multer from 'multer';
 import { AppError } from '../utils/AppError.js';
 
 /**
@@ -10,6 +11,29 @@ export const errorMiddleware: ErrorRequestHandler = (err, req, res, next) => {
     res.status(err.statusCode).json({
       success: false,
       message: err.message,
+    });
+    return;
+  }
+
+  // 2. Xử lý lỗi từ Multer upload (giới hạn dung lượng, sai field)
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      res.status(413).json({
+        success: false,
+        message: 'Kích thước file vượt quá giới hạn cho phép (tối đa 2MB)',
+      });
+      return;
+    }
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      res.status(400).json({
+        success: false,
+        message: 'Tên trường file không hợp lệ (yêu cầu field name là avatar)',
+      });
+      return;
+    }
+    res.status(400).json({
+      success: false,
+      message: `Lỗi tải file: ${err.message}`,
     });
     return;
   }

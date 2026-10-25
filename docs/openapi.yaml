@@ -90,6 +90,42 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
+  /api/auth/me/avatar:
+    post:
+      tags: [Auth]
+      summary: Cập nhật ảnh đại diện người dùng (Protected - isAuth)
+      description: Tải lên 1 file ảnh (JPEG/PNG, tối đa 2MB) để cập nhật ảnh đại diện cho tài khoản đang đăng nhập.
+      operationId: uploadAvatar
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [avatar]
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: File ảnh định dạng JPEG hoặc PNG (tối đa 2MB)
+      responses:
+        "200":
+          description: Cập nhật ảnh đại diện thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvatarUploadResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
   # ===========================================================================
   # SINH VIEN CRUD ENDPOINTS (RBAC)
   # ===========================================================================
@@ -287,6 +323,27 @@ components:
           type: string
           enum: [student, admin]
           example: student
+        avatarUrl:
+          type: string
+          nullable: true
+          example: /uploads/550e8400-e29b-41d4-a716-446655440000.png
+
+    AvatarUploadDTO:
+      type: object
+      required: [avatarUrl]
+      properties:
+        avatarUrl:
+          type: string
+          example: /uploads/550e8400-e29b-41d4-a716-446655440000.png
+
+    AvatarUploadResponse:
+      type: object
+      required: [success, message, data]
+      properties:
+        success: { type: boolean, enum: [true], example: true }
+        message: { type: string, example: Cập nhật ảnh đại diện thành công }
+        data:
+          $ref: "#/components/schemas/AvatarUploadDTO"
 
     UserResponse:
       type: object
@@ -402,6 +459,12 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
     Unauthorized:
       description: Yêu cầu Bearer token hoặc token không hợp lệ / hết hạn (401)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    PayloadTooLarge:
+      description: Kích thước file vượt quá giới hạn (413 Payload Too Large)
       content:
         application/json:
           schema:

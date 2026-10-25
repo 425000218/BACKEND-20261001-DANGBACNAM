@@ -19,9 +19,13 @@ app.use(loggerMiddleware);
 app.use(
   helmet({
     contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   })
 );
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
+  credentials: true,
+}));
 
 // 3. Parser JSON
 app.use(express.json());
@@ -37,7 +41,10 @@ app.get("/", (req, res) => {
 // 5. Gắn Swagger UI tại đường dẫn /api-docs (trước handler 404)
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// 6. Gắn route xác thực tài khoản (Register, Login, Profile)
+// 6. Phục vụ ảnh tĩnh đã được kiểm duyệt hợp lệ từ thư mục public/uploads
+app.use("/uploads", express.static("public/uploads"));
+
+// 7. Gắn route xác thực tài khoản (Register, Login, Profile, Avatar)
 app.use("/api/auth", authRoutes);
 
 // 6. Gắn route quản lý sinh viên

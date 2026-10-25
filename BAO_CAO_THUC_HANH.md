@@ -258,4 +258,138 @@ Quá trình phối hợp Vibe Coding cùng AI đòi hỏi sinh viên phải rà 
 * Khi `isAuth` thực thi thành công, nó gán thuộc tính trực tiếp vào đối tượng này: `req.user = { id: payload.sub, role: payload.role }` rồi gọi `next()`.
 * Middleware tiếp theo trong chuỗi (`isAdmin`) nhận cùng đối tượng `req` đó và có thể đọc trực tiếp `req.user.role`. Để TypeScript không báo lỗi thiếu thuộc tính, dự án đã tạo file mở rộng kiểu dữ liệu [`src/types/express.d.ts`](file:///d:/BACKEND-20261001-DANGBACNAM/src/types/express.d.ts) khai báo bổ sung trường `user?: IUserAuth` vào namespace `Express.Request`.
 
+---
+
+# PHẦN III: BÁO CÁO THỰC HÀNH CHƯƠNG 07 (BUỔI 08 - BUỔI 09)
+## UPLOAD HÌNH ẢNH & KẾT NỐI FRONTEND – BACKEND (MULTER · VITE · REACT · AXIOS · CORS · JWT)
+
+### 1. Mục tiêu và Đề bài thực hành Chương 07
+* Tiếp nối trực tiếp từ hệ thống Quản lý sinh viên sau Chương 06, không tạo backend mới và không đổi sang domain khác.
+* Xây dựng luồng tải lên ảnh đại diện an toàn cho tài khoản người dùng thông qua giao thức `multipart/form-data` và thư viện `multer`.
+* Cấu hình các chốt chặn an ninh nghiêm ngặt: giới hạn dung lượng file tối đa $\le$ 2MB (2.097.152 bytes), sinh tên file ngẫu nhiên bằng UUID, thẩm định chữ ký nhị phân thực tế (Magic bytes) của ảnh PNG/JPEG và tự động dọn sạch file rác nếu phát hiện tệp tin giả mạo.
+* Phân tách kiến trúc lưu trữ dữ liệu đa phương tiện: File nhị phân lưu tại thư mục vật lý [`public/uploads/`](file:///d:/BACKEND-20261001-DANGBACNAM/public/uploads), CSDL SQL Server chỉ lưu trữ chuỗi đường dẫn tương đối `/uploads/<uuid>.<ext>` tại cột `avatarUrl` trong bảng `dbo.Users`.
+* Xây dựng ứng dụng Frontend độc lập bằng **Vite + React + TypeScript + Axios** đặt trong thư mục `frontend/`, kết nối an toàn với Backend qua chính sách **CORS Allowlist** (`http://localhost:5173`).
+* Hiện thực hóa đầy đủ các màn hình giao diện: Bảng hiển thị danh sách sinh viên 4 cột kèm xử lý trạng thái Loading/Empty/Error/Retry, Form đăng nhập lưu token trong bộ nhớ và hiển thị Profile Card, Nút Xóa sinh viên chỉ hiển thị và thực thi với quyền Admin, Component tải ảnh đại diện trực tiếp kèm preview.
+
+---
+
+### 2. Thiết kế Cơ sở Dữ liệu Bổ sung (Cột `avatarUrl`)
+File kịch bản: [`sql/05-add-avatar-url.sql`](file:///d:/BACKEND-20261001-DANGBACNAM/sql/05-add-avatar-url.sql)
+
+```sql
+USE QuanLySinhVienDB;
+GO
+
+-- 1. Bổ sung an toàn cột avatarUrl vào bảng dbo.Users nếu chưa tồn tại (Idempotent)
+IF COL_LENGTH('dbo.Users', 'avatarUrl') IS NULL
+BEGIN
+    ALTER TABLE dbo.Users
+    ADD avatarUrl NVARCHAR(255) NULL;
+    PRINT N'Đã thêm thành công cột avatarUrl NVARCHAR(255) NULL vào bảng dbo.Users.';
+END;
+GO
+
+-- 2. Cấp quyền thao tác cho tài khoản ứng dụng sv_app
+GRANT SELECT, INSERT, UPDATE, DELETE ON dbo.Users TO sv_app;
+GO
+```
+* **Tính chất kỹ thuật**: Script có tính lũy kế (idempotent), cho phép chạy lặp lại nhiều lần mà không gây lỗi trùng cột, bảo toàn toàn bộ dữ liệu người dùng cũ và duy trì nguyên vẹn cấu trúc bảng.
+
+---
+
+### 3. Kiến trúc Hai Luồng Xử lý Xuyên suốt Chương 07
+
+#### 🔹 Luồng A: Cập nhật Ảnh đại diện của Người dùng đang đăng nhập
+```
+[ React <input type="file"> ] 
+        │ (Chọn ảnh ≤ 2MB, tạo FormData.append("avatar", file))
+        ▼
+[ Axios POST /api/auth/me/avatar + Header: Authorization: Bearer <JWT> ]
+        │
+        ▼
+[ Express Router ] ──► [ isAuth Middleware ] (Chặn 401 nếu thiếu/sai JWT)
+        │
+        ▼ (Hợp lệ: Gán req.user = { id, role })
+[ Multer Middleware ] (Kiểm tra kích thước ≤ 2MB, bắt mã 413 nếu quá tải)
+        │
+        ▼ (Lưu file tạm vào public/uploads/<UUID>.<ext>)
+[ Magic Bytes Verifier ] (Đọc 8 byte đầu: PNG 89 50 4E 47 / JPEG FF D8 FF)
+        │  ├── Giả mạo: Xóa ngay file rác trên đĩa ──► 400 Bad Request
+        │
+        ▼ (Hợp lệ)
+[ Auth Controller & Service ] (Cập nhật avatarUrl = "/uploads/<UUID>.<ext>" vào dbo.Users)
+        │
+        ▼ (200 OK: Trả về { success: true, data: { avatarUrl } })
+[ React UI ] (Cập nhật thẻ <img> hiển thị ảnh đại diện mới của chính chủ)
+```
+
+#### 🔹 Luồng B: Xem và Xóa Sinh viên trên Giao diện React
+```
+1. Xem danh sách:
+   [ React SinhVienTable ] ──► [ Axios GET /api/v1/sinh-vien ] ──► [ Express ] ──► [ SQL Server ]
+   (Nhận response.data.data ──► Render Bảng 4 cột: maSV, hoTen, email, maLop)
+
+2. Xóa sinh viên (RBAC):
+   [ Nút Xóa (Chỉ hiện khi profile.role === 'admin') ] ──► [ Confirm Popup ]
+        │
+        ▼
+   [ Axios DELETE /api/v1/sinh-vien/:maSV + Header: Bearer <adminToken> ]
+        │
+        ▼
+   [ isAuth Middleware ] ──► [ isAdmin Middleware ] (Chặn 403 Forbidden nếu là student)
+        │
+        ▼ (Quyền Admin hợp lệ)
+   [ Controller & Service ] ──► [ SQL Server DELETE ] ──► [ 200 OK ] ──► [ Reload Table ]
+```
+
+---
+
+### 4. Bảng Kết Quả Kiểm Thử Toàn Diện Chương 07
+
+#### 🔹 Nhóm U: Ma trận 12 Ca Kiểm thử Upload & Multer (U01 - U12)
+* **Kết quả**: **12 / 12 ca kiểm thử ĐẠT (100.0%)**
+
+| Mã | Tình huống kiểm thử | Expected | Thực tế | Kết quả | Minh chứng 3 tầng (Postman · Đĩa · SSMS) |
+|:---:|---|:---:|:---:|:---:|---|
+| **U01** | Avatar PNG hợp lệ + Student JWT | 200 | 200 | ✅ PASS | Postman 200 OK; ổ đĩa thêm file UUID mới; SSMS cập nhật đúng `avatarUrl`. |
+| **U02** | Avatar JPEG hợp lệ + Mở qua HTTP | 200 | 200 | ✅ PASS | Trả về 200 OK. Phục vụ tĩnh GET `/uploads/<file>.jpg` trả 200 OK, mở xem ảnh nét. |
+| **U03** | Không có Authorization header | 401 | 401 | ✅ PASS | `isAuth` chặn trước khi vào Multer. Số file trên đĩa giữ nguyên, CSDL không đổi. |
+| **U04** | JWT sai hoặc đã hết hạn | 401 | 401 | ✅ PASS | Bị chặn 401 Unauthorized, không sinh tệp mới trên đĩa. |
+| **U05** | Form-data thiếu file | 400 | 400 | ✅ PASS | Bắt lỗi thiếu file, trả 400 Bad Request: "Không tìm thấy file tải lên". |
+| **U06** | Sai tên field (photo thay vì avatar) | 400 | 400 | ✅ PASS | Multer bắt `LIMIT_UNEXPECTED_FILE`, trả 400 Bad Request. |
+| **U07** | Kích thước file > 2MB (2.2MB) | 413 | 413 | ✅ PASS | Bắt `LIMIT_FILE_SIZE`, trả đúng mã 413 Payload Too Large. Tự dọn sạch file rác. |
+| **U08** | File TXT giả mạo đuôi .png | 400 | 400 | ✅ PASS | Kiểm tra chữ ký nhị phân (magic bytes) thất bại, trả 400 và xóa ngay file rác. |
+| **U09** | Đuôi .gif không cho phép | 400 | 400 | ✅ PASS | `fileFilter` chặn định dạng khác PNG/JPEG, trả 400 Bad Request. |
+| **U10** | Upload liên tiếp 2 lần cùng tài khoản | 200 | 200 | ✅ PASS | CSDL nhận URL mới, tên file UUID tránh ghi đè ngẫu nhiên. |
+| **U11** | Gửi kèm userId của B trong body | 200 | 200 | ✅ PASS | Server chỉ lấy ID từ JWT, bỏ qua body. Avatar của B hoàn toàn bất biến. |
+| **U12** | GET Profile & Độ bền vững file | 200 | 200 | ✅ PASS | Profile trả đúng trường `avatarUrl` mới; HTTP GET ảnh tĩnh thành công 200 OK. |
+
+#### 🔹 Nhóm F: Ma trận 12 Ca Kiểm thử Frontend Vite, Axios & CORS (F01 - F12)
+* **Kết quả**: **12 / 12 ca kiểm thử ĐẠT (100.0%)**
+
+| Mã | Tình huống kiểm thử | Expected | Thực tế | Kết quả | Ghi chú DevTools Network & Giao diện |
+|:---:|---|---|---|:---:|---|
+| **F01** | Vite chạy & Kiểm tra CORS allowlist | Status 200 OK, có header Access-Control-Allow-Origin | Status 200, Allow-Origin: http://localhost:5173 | ✅ PASS | Trình duyệt không chặn kết nối, không có lỗi CORS console. |
+| **F02** | Render Bảng 4 cột Sinh viên | Hiển thị đủ 4 cột `maSV`, `hoTen`, `email`, `maLop` | Đủ 4 cột dữ liệu thực tế từ SQL Server | ✅ PASS | Đọc đúng mảng tại `res.data.data`, hiển thị badge trực quan. |
+| **F03** | Xử lý danh sách rỗng (Empty state) | Khi CSDL không có sinh viên | Alert vàng thông báo danh sách trống | ✅ PASS | Ứng dụng ổn định, không bị crash trắng trang. |
+| **F04** | Xử lý lỗi kết nối Backend tắt | Bắt lỗi mạng, tắt spinner loading, hiện nút "Thử lại" | Bắt lỗi kết nối, hiện alert lỗi và nút Thử lại | ✅ PASS | Tránh được vòng lặp loading vô hạn. |
+| **F05** | Phục hồi kết nối với nút Thử lại | Gọi lại `fetchDanhSach()`, khôi phục dữ liệu | Status 200 OK, bảng dữ liệu hiện lại | ✅ PASS | Phục hồi bảng dữ liệu mượt mà không cần F5 toàn trang. |
+| **F06** | Đăng nhập Student hợp lệ | Cấp JWT, hiển thị Profile Card sinh viên | Role STUDENT, email an.lab@example.com | ✅ PASS | Lưu token vào bộ nhớ React state an toàn. |
+| **F07** | Đăng nhập sai mật khẩu | Báo lỗi 401 Unauthorized, không cấp token | Bắt 401, hiện alert đỏ, token null | ✅ PASS | Xử lý lỗi xác thực chuẩn xác. |
+| **F08** | Xem Profile khi chưa đăng nhập | Chặn 401, yêu cầu đăng nhập lại | Chặn 401 Unauthorized | ✅ PASS | Bảo vệ danh tính người dùng chặt chẽ. |
+| **F09** | Student ép gọi DELETE qua DevTools | Chặn 403 Forbidden, CSDL không đổi | Chặn 403 Forbidden | ✅ PASS | Phân quyền RBAC Backend hoạt động độc lập, không tin tưởng UI. |
+| **F10** | Admin Xóa sinh viên test thành công | Trả 200 OK, CSDL xóa bản ghi, UI tự reload | Status 200 OK, xóa vĩnh viễn SV999 | ✅ PASS | Bảng sinh viên tự động cập nhật loại bỏ bản ghi. |
+| **F11** | Upload Avatar từ React FormData | Trả 200, cập nhật ảnh preview và URL Profile | Status 200, ảnh hiển thị trực tiếp | ✅ PASS | Kết nối trọn vẹn từ React file input tới CSDL và thư mục đĩa. |
+| **F12** | Chặn CORS từ Origin lạ | Trình duyệt chặn CORS, không cấp header allow-origin | Allow-Origin: null | ✅ PASS | CORS allowlist bảo vệ an toàn trước tấn công Cross-Origin. |
+
+---
+
+### 5. Bài học Vibe Coding & Phản biện Bảo mật (Security Review)
+* Quá trình tích hợp Frontend - Backend giúp làm sáng tỏ sự khác biệt cơ bản giữa **Bảo vệ Giao diện (UI/UX)** và **Bảo vệ Máy chủ (Backend Security)**:
+  * Việc ẩn nút Xóa trên giao diện chỉ là giải pháp tiện ích cho người dùng, hoàn toàn không thể thay thế cho middleware `isAdmin` ở backend.
+  * Việc kiểm tra dung lượng 2MB tại trình duyệt (`file.size > 2MB`) chỉ giúp phản hồi nhanh cho người dùng, máy chủ Express vẫn bắt buộc phải cấu hình `limits.fileSize` trong Multer để chặn đứng các request gửi qua Postman/curl.
+  * Việc kiểm tra đuôi mở rộng `.png` ở client chỉ là bộ lọc hiển thị tệp; server bắt buộc phải kiểm tra **chữ ký nhị phân 8 byte đầu (Magic bytes)** để ngăn chặn các tệp mã độc nguy hiểm giả mạo định dạng hình ảnh.
+  * Tuyệt đối không bao giờ nhận `userId` từ `req.body` trong các endpoint cá nhân (`/me/...`) nhằm triệt tiêu hoàn toàn lỗ hổng leo thang quyền hạn và sửa đổi dữ liệu chéo (IDOR / BOLA).
+
+
 
