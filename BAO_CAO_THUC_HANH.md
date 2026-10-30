@@ -389,7 +389,65 @@ GO
   * Việc ẩn nút Xóa trên giao diện chỉ là giải pháp tiện ích cho người dùng, hoàn toàn không thể thay thế cho middleware `isAdmin` ở backend.
   * Việc kiểm tra dung lượng 2MB tại trình duyệt (`file.size > 2MB`) chỉ giúp phản hồi nhanh cho người dùng, máy chủ Express vẫn bắt buộc phải cấu hình `limits.fileSize` trong Multer để chặn đứng các request gửi qua Postman/curl.
   * Việc kiểm tra đuôi mở rộng `.png` ở client chỉ là bộ lọc hiển thị tệp; server bắt buộc phải kiểm tra **chữ ký nhị phân 8 byte đầu (Magic bytes)** để ngăn chặn các tệp mã độc nguy hiểm giả mạo định dạng hình ảnh.
-  * Tuyệt đối không bao giờ nhận `userId` từ `req.body` trong các endpoint cá nhân (`/me/...`) nhằm triệt tiêu hoàn toàn lỗ hổng leo thang quyền hạn và sửa đổi dữ liệu chéo (IDOR / BOLA).
+
+---
+
+# PHẦN IV: BÁO CÁO THỰC HÀNH CHƯƠNG 08
+## TRUY VẤN NÂNG CAO & PHÂN TRANG - XỬ LÝ LỖI TẬP TRUNG
+### (Sequelize · SQL Server · Express 5 · React)
+
+### 1. Mục tiêu và Kiến trúc Kỹ thuật
+
+Trong Chương 08, hệ thống RESTful API Quản lý Sinh viên tiếp tục được nâng cấp hai mảng kiến trúc cốt lõi:
+
+1. **Lab 1: Phân trang (Pagination) & Tìm kiếm (Search)**
+   - Query Parameters chuẩn: `page` (trang hiện tại, mặc định 1), `limit` (số bản ghi/trang, mặc định 10, tối đa 50), `search` (chuỗi tìm kiếm họ tên gần đúng, tối đa 80 ký tự).
+   - Middleware `validateSinhVienQuery`: Chuẩn hóa kiểu dữ liệu, cắt tỉa khoảng trắng (trim), trả về `400 Bad Request` nếu truyền tham số không hợp lệ.
+   - Sequelize ORM `findAndCountAll`: Sử dụng toán tử `Op.like` cho SQL Server, đồng thời tính toán `totalItems`, `totalPages`, `page`, `limit`.
+
+2. **Lab 2: Xử lý Lỗi Tập trung (Centralized Error Handling)**
+   - Lớp lỗi nghiệp vụ `AppError`: Kế thừa `Error`, lưu trữ `statusCode` và cờ `isOperational: true`.
+   - Middleware toàn cục `errorHandler`: Nhận 4 tham số `(err, req, res, next)`, kiểm tra `res.headersSent`, phân loại chính xác các mã HTTP (400, 401, 403, 404, 500).
+   - Bảo mật thông tin máy chủ (Information Masking): Khi `NODE_ENV === 'production'`, lỗi 500 che giấu hoàn toàn stack trace và hiển thị thông điệp chung `"Lỗi hệ thống, vui lòng thử lại sau"`.
+
+3. **Bài tập Mở rộng: 4 Kỹ thuật Truy vấn CSDL**
+   - **Raw SQL Query**: Gọi `sequelize.query(...)` với `QueryTypes.SELECT` thực hiện `LEFT JOIN` và `GROUP BY`.
+   - **Stored Procedure**: Tạo và thực thi thủ tục biên dịch sẵn `dbo.sp_ThongKeSinhVienTheoLop` trên SQL Server.
+   - **Sequelize Group & Count**: Sử dụng `SinhVien.findAll` với `sequelize.fn('COUNT')` và mệnh đề `group: ['maLop']`.
+   - **Eager Loading (JOIN Model)**: Sử dụng quan hệ liên kết `SinhVien.belongsTo(Lop)` để truy vấn thông tin sinh viên kèm tên lớp học.
+
+---
+
+### 2. Bảng Tổng hợp Kịch bản Kiểm thử
+
+| Nhóm | Số lượng kịch bản | Phạm vi kiểm tra | Trạng thái kỹ thuật |
+|---|:---:|---|---|
+| **Nhóm P: Phân trang & Tìm kiếm** | 17 tình huống (P01–P17) | Mặc định, trang 1, 2, 4, 99; search tiếng Việt; kết hợp search & paging; validation lỗi 400 | Phản hồi đúng đặc tả JSON & metadata |
+| **Nhóm E: Xử lý Lỗi & Bảo mật** | 10 tình huống (E01–E10) | Lỗi 404 sinh viên, 404 route, 400 JSON hỏng, 500 test & production masking, 401 Auth, 403 RBAC | Chuẩn hóa cấu trúc phản hồi lỗi |
+| **Nhóm X: Truy vấn Mở rộng** | 4 kỹ thuật (X01–X04) | Raw SQL, Sequelize Group/Count, Stored Procedure, Eager Loading JOIN | Dữ liệu trả về đồng nhất và chính xác |
+
+---
+
+### 3. Tích hợp Giao diện Frontend React
+
+- **Tệp component**: `frontend/src/components/SinhVienTable.tsx`
+- **Ô tìm kiếm họ tên**: Nhập liệu thời gian thực, tự động reset về trang 1 khi từ khóa thay đổi.
+- **Thanh điều hướng phân trang**:
+  - Nút **Trang trước (Previous)** và **Trang sau (Next)** có trạng thái `disabled` phù hợp tại các trang biên.
+  - Hiển thị tiến trình: `"Trang X / Y (Tổng số: Z sinh viên)"`.
+  - Hộp chọn số lượng bản ghi hiển thị trên mỗi trang (`2, 5, 10, 20/trang`).
+
+---
+
+### 4. Hồ sơ Bàn giao & Tài liệu Đính kèm
+
+Toàn bộ tài liệu chính thức của Chương 08 được lưu trữ tại thư mục `docs/`:
+- **Báo cáo chính thức PDF**: [`docs/Bao_Cao_Thuc_Hanh_Chuong_08.pdf`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Bao_Cao_Thuc_Hanh_Chuong_08.pdf)
+- **Bản Word phục vụ lưu trữ**: [`docs/Bao_Cao_Thuc_Hanh_Chuong_08.docx`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Bao_Cao_Thuc_Hanh_Chuong_08.docx)
+- **File Postman Collection**: [`docs/Chuong08-Pagination-Error.postman_collection.json`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Chuong08-Pagination-Error.postman_collection.json)
+- **Hướng dẫn & Câu hỏi bảo vệ bài**: [`docs/bai_thuc_hanh_chuong_08.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/bai_thuc_hanh_chuong_08.md)
+- **Đặc tả OpenAPI 3.0**: [`docs/openapi.yaml`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/openapi.yaml)
+- **Ảnh chụp minh chứng kiểm thử**: Thư mục [`docs/screenshots/`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/) (bao gồm ảnh Postman, Swagger UI, và Frontend React).
 
 
 

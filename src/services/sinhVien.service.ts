@@ -1,23 +1,75 @@
-import { UniqueConstraintError, ForeignKeyConstraintError } from "sequelize";
+import {
+  UniqueConstraintError,
+  ForeignKeyConstraintError,
+  Op,
+  fn,
+  col,
+  QueryTypes,
+  type WhereOptions,
+} from "sequelize";
 import type { ISinhVienDTO } from "../dtos/sinhVien.dto.js";
-import { SinhVien } from "../models/SinhVien.js";
+import { SinhVien, Lop } from "../models/index.js";
+import { sequelize } from "../config/database.js";
 import { AppError } from "../utils/AppError.js";
 
+export interface IPaginationMeta {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface IPaginatedResult<T> {
+  data: T[];
+  pagination: IPaginationMeta;
+}
+
 /**
- * 1. Lấy toàn bộ danh sách sinh viên từ SQL Server, sắp xếp theo maSV tăng dần
+ * 1. Lấy danh sách sinh viên từ SQL Server có hỗ trợ Phân trang và Tìm kiếm (Chương 08)
+ * Sử dụng findAndCountAll tại tầng Database, sắp xếp cố định ORDER BY maSV ASC.
+ * - rows: mảng sinh viên thuộc trang hiện tại (không tải toàn bộ rồi slice).
+ * - count: tổng số sinh viên thỏa điều kiện search hoTen.
+ * - Khi không có dữ liệu: data = [], totalPages = 0, totalItems = 0.
  */
-export const layDanhSachSinhVien = async (): Promise<ISinhVienDTO[]> => {
-  const danhSach = await SinhVien.findAll({
+export const layDanhSachSinhVien = async (
+  queryOptions?: { page?: number; limit?: number; search?: string }
+): Promise<IPaginatedResult<ISinhVienDTO>> => {
+  const page = queryOptions?.page ?? 1;
+  const limit = queryOptions?.limit ?? 10;
+  const search = queryOptions?.search ? queryOptions.search.trim() : "";
+
+  const offset = (page - 1) * limit;
+
+  // Điều kiện tìm kiếm theo hoTen (áp dụng trước khi đếm và chia trang)
+  const where: WhereOptions = {};
+  if (search.length > 0) {
+    where.hoTen = { [Op.like]: `%${search}%` };
+  }
+
+  // Thực hiện phân trang thật tại SQL Server với findAndCountAll
+  const { rows, count } = await SinhVien.findAndCountAll({
+    where,
+    limit,
+    offset,
     order: [["maSV", "ASC"]],
   });
 
-  // Chuyển đổi Model instance sang plain DTO đúng 4 trường
-  return danhSach.map((sv) => ({
-    maSV: sv.maSV,
-    hoTen: sv.hoTen,
-    email: sv.email,
-    maLop: sv.maLop,
-  }));
+  const totalPages = count === 0 ? 0 : Math.ceil(count / limit);
+
+  return {
+    data: rows.map((sv) => ({
+      maSV: sv.maSV,
+      hoTen: sv.hoTen,
+      email: sv.email,
+      maLop: sv.maLop,
+    })),
+    pagination: {
+      page,
+      limit,
+      totalItems: count,
+      totalPages,
+    },
+  };
 };
 
 /**
@@ -215,4 +267,78 @@ export const xoaSinhVien = async (maSV: string): Promise<void> => {
   }
 
   await sv.destroy();
+};
+
+/**
+ * 6. [MỞ RỘNG BUỔI 10 - A] Thống kê số lượng sinh viên theo lớp bằng Raw SQL Query
+ */
+export const thongKeTheoLopRawQuery = async (): Promise<Array<{ maLop: string; totalStudents: number }>> => {
+  const query = `
+    SELECT maLop, COUNT(*) AS totalStudents
+    FROM dbo.SinhVien
+    GROUP BY maLop
+    ORDER BY maLop ASC;
+  `;
+  const results = await sequelize.query<{ maLop: string; totalStudents: number }>(query, {
+    type: QueryTypes.SELECT,
+  });
+  return results.map(r => ({
+    maLop: r.maLop,
+    totalStudents: Number(r.totalStudents),
+  }));
+};
+
+/**
+ * 7. [MỞ RỘNG BUỔI 10 - B] Thống kê số lượng sinh viên theo lớp bằng Sequelize Group/Count Method
+ */
+export const thongKeTheoLopSequelize = async (): Promise<Array<{ maLop: string; totalStudents: number }>> => {
+  const results = (await SinhVien.findAll({
+    attributes: ["maLop", [fn("COUNT", col("maSV")), "totalStudents"]],
+    group: ["maLop"],
+    order: [["maLop", "ASC"]],
+    raw: true,
+  })) as unknown as Array<{ maLop: string; totalStudents: number | string }>;
+
+  return results.map(r => ({
+    maLop: r.maLop,
+    totalStudents: Number(r.totalStudents),
+  }));
+};
+
+/**
+ * 8. [MỞ RỘNG BUỔI 10 - C] Thống kê qua Stored Procedure chỉ đọc dbo.sp_ThongKeSinhVienTheoLop
+ */
+export const thongKeTheoLopStoredProcedure = async (): Promise<Array<{ maLop: string; totalStudents: number }>> => {
+  const query = `EXEC dbo.sp_ThongKeSinhVienTheoLop;`;
+  const results = await sequelize.query<{ maLop: string; totalStudents: number }>(query, {
+    type: QueryTypes.SELECT,
+  });
+  return results.map(r => ({
+    maLop: r.maLop,
+    totalStudents: Number(r.totalStudents),
+  }));
+};
+
+/**
+ * 9. [MỞ RỘNG BUỔI 10 - D] Lấy danh sách Sinh viên JOIN với bảng Lop
+ */
+export const layDanhSachKemLop = async (): Promise<Array<ISinhVienDTO & { tenLop?: string }>> => {
+  const danhSach = await SinhVien.findAll({
+    include: [
+      {
+        model: Lop,
+        as: "lop",
+        attributes: ["tenLop"],
+      },
+    ],
+    order: [["maSV", "ASC"]],
+  });
+
+  return danhSach.map(sv => ({
+    maSV: sv.maSV,
+    hoTen: sv.hoTen,
+    email: sv.email,
+    maLop: sv.maLop,
+    tenLop: (sv as unknown as { lop?: { tenLop: string } }).lop?.tenLop,
+  }));
 };

@@ -15,7 +15,7 @@ const app = express();
 // 1. Logger middleware
 app.use(loggerMiddleware);
 
-// 2. Bảo mật headers và CORS (cho phép Swagger chạy scripts)
+// 2. Bảo mật headers và CORS (cho phép Swagger và Frontend chạy mượt mà)
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -27,7 +27,7 @@ app.use(cors({
   credentials: true,
 }));
 
-// 3. Parser JSON
+// 3. Parser JSON body
 app.use(express.json());
 
 // 4. Tuyến đường gốc kiểm tra trạng thái hoạt động của server
@@ -47,18 +47,20 @@ app.use("/uploads", express.static("public/uploads"));
 // 7. Gắn route xác thực tài khoản (Register, Login, Profile, Avatar)
 app.use("/api/auth", authRoutes);
 
-// 6. Gắn route quản lý sinh viên
+// 8. Gắn route quản lý sinh viên (Chương 08: Pagination, Search, Error Flow, Extensions)
 app.use("/api/v1/sinh-vien", sinhVienRoutes);
 
-// 6. Xử lý đường dẫn không tồn tại (404)
+// 9. Xử lý đường dẫn không tồn tại (404 Fallback chuẩn hóa)
 app.use((req, res) => {
   res.status(404).json({
     success: false,
+    status: 404,
     message: "Không tìm thấy đường dẫn",
+    data: null,
   });
 });
 
-// 7. Middleware xử lý lỗi tập trung (luôn đứng cuối cùng)
+// 10. Middleware xử lý lỗi tập trung (luôn đứng cuối cùng trong pipeline Express)
 app.use(errorMiddleware);
 
 // Hàm khởi động an toàn: Xác thực CSDL trước khi mở cổng HTTP

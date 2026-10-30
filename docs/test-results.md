@@ -113,8 +113,51 @@ Công cụ kiểm thử: **Automated TypeScript Test Runner (`pnpm run test:24`)
 
 ---
 
-## 🎯 4. KẾT LUẬN
-Hệ thống backend đáp ứng đầy đủ và vượt trội các tiêu chí kiểm thử của Chương 06:
-- Tỷ lệ vượt qua kiểm thử: **24/24 ca kiểm thử ĐẠT (100%)**.
-- Bảo mật: Băm bcrypt cost 12, JWT HS256 hạn 1 giờ, chống Privilege Escalation, chống Email Enumeration, phân quyền Role-Based Access Control chặt chẽ.
-- Tài liệu kiểm thử: Đầy đủ Postman Collection JSON, OpenAPI 3.0 YAML, test runner tự động `pnpm run test:24`.
+## 📋 5. KỊCH BẢN KIỂM THỬ CHƯƠNG 08: TRUY VẤN NÂNG CAO, PHÂN TRANG & XỬ LÝ LỖI TẬP TRUNG
+
+### 🔹 Nhóm P: Phân trang & Tìm kiếm (Pagination & Search - P01 đến P17)
+
+| Mã Ca | Tên Tình Huống | Tuyến đường (Endpoint) | HTTP Kỳ vọng | HTTP Thực tế | Hiện trạng phản hồi |
+|:---:|---|---|:---:|:---:|---|
+| **P01** | Lấy danh sách mặc định không truyền query | `GET /api/v1/sinh-vien` | **200** | **200** | Trả về dữ liệu trang 1, limit 10, metadata `totalItems: 7, totalPages: 1`. |
+| **P02** | Phân trang: Trang 1 với limit = 2 | `GET /api/v1/sinh-vien?page=1&limit=2` | **200** | **200** | Trả về 2 bản ghi (SV001, SV002), `totalItems: 7, totalPages: 4`. |
+| **P03** | Phân trang: Trang 2 với limit = 2 | `GET /api/v1/sinh-vien?page=2&limit=2` | **200** | **200** | Trả về 2 bản ghi tiếp theo (SV003, SV004), không trùng lặp trang 1. |
+| **P04** | Phân trang: Trang 4 (trang cuối cùng) | `GET /api/v1/sinh-vien?page=4&limit=2` | **200** | **200** | Trả về 1 bản ghi còn lại (SV077), `page: 4, totalPages: 4`. |
+| **P05** | Phân trang: Trang vượt quá tổng số trang | `GET /api/v1/sinh-vien?page=99&limit=2` | **200** | **200** | Trả về mảng rỗng `data: []`, metadata `page: 99, totalPages: 4`. |
+| **P06** | Tìm kiếm theo họ tên có kết quả | `GET /api/v1/sinh-vien?search=Anh` | **200** | **200** | Trả về 3 sinh viên có chứa "Anh" (Lan Anh, Tuấn Anh, Quỳnh Anh). |
+| **P07** | Tìm kiếm không phân biệt hoa thường | `GET /api/v1/sinh-vien?search=anh` | **200** | **200** | Kết quả khớp tương đương `search=Anh` (3 sinh viên). |
+| **P08** | Tìm kiếm từ khóa không tồn tại | `GET /api/v1/sinh-vien?search=KhongTonTaiXYZ` | **200** | **200** | Trả về mảng rỗng `data: []`, `totalItems: 0, totalPages: 0`. |
+| **P09** | Kết hợp Tìm kiếm và Phân trang (Trang 1) | `GET /api/v1/sinh-vien?search=Anh&page=1&limit=2` | **200** | **200** | Trả về 2 bản ghi đầu tiên trong số 3 sinh viên tìm thấy. |
+| **P10** | Kết hợp Tìm kiếm và Phân trang (Trang 2) | `GET /api/v1/sinh-vien?search=Anh&page=2&limit=2` | **200** | **200** | Trả về 1 bản ghi còn lại trong tập kết quả tìm kiếm. |
+| **P11** | Tìm kiếm với khoảng trắng ở hai đầu (Trim) | `GET /api/v1/sinh-vien?search=%20Anh%20` | **200** | **200** | Middleware tự động trim khoảng trắng, trả về 3 sinh viên. |
+| **P12** | Validation lỗi: `page = 0` | `GET /api/v1/sinh-vien?page=0` | **400** | **400** | Trả về 400 Bad Request: "page phải là số nguyên dương >= 1". |
+| **P13** | Validation lỗi: `page` âm (`page = -1`) | `GET /api/v1/sinh-vien?page=-1` | **400** | **400** | Trả về 400 Bad Request: "page phải là số nguyên dương >= 1". |
+| **P14** | Validation lỗi: `page` dạng chuỗi không phải số | `GET /api/v1/sinh-vien?page=abc` | **400** | **400** | Trả về 400 Bad Request: "page phải là số nguyên dương >= 1". |
+| **P15** | Validation lỗi: `limit = 0` | `GET /api/v1/sinh-vien?limit=0` | **400** | **400** | Trả về 400 Bad Request: "limit phải là số nguyên dương từ 1 đến 50". |
+| **P16** | Validation lỗi: `limit` vượt ngưỡng (`limit = 100`) | `GET /api/v1/sinh-vien?limit=100` | **400** | **400** | Trả về 400 Bad Request: "limit phải là số nguyên dương từ 1 đến 50". |
+| **P17** | Validation lỗi: `search` quá 80 ký tự | `GET /api/v1/sinh-vien?search=a...` | **400** | **400** | Trả về 400 Bad Request: "search không được vượt quá 80 ký tự". |
+
+### 🔹 Nhóm E: Xử lý Lỗi Tập trung & Bảo mật (Centralized Error - E01 đến E10)
+
+| Mã Ca | Tên Tình Huống | Tuyến đường (Endpoint) | HTTP Kỳ vọng | HTTP Thực tế | Hiện trạng phản hồi |
+|:---:|---|---|:---:|:---:|---|
+| **E01** | Tìm sinh viên theo mã không tồn tại | `GET /api/v1/sinh-vien/SV999` | **404** | **404** | `AppError(404)` bắt và trả về: "Không tìm thấy sinh viên". |
+| **E02** | Đường dẫn API không tồn tại | `GET /api/v1/duong-dan-khong-ton-tai` | **404** | **404** | Fallback 404 handler chuẩn hóa: "Không tìm thấy đường dẫn". |
+| **E03** | Phương thức HTTP không hỗ trợ | `PATCH /api/v1/sinh-vien` | **404** | **404** | Trả về JSON chuẩn 404 Not Found. |
+| **E04** | Route con không hỗ trợ | `GET /api/v1/sinh-vien/SV001/mon-hoc` | **404** | **404** | Trả về JSON chuẩn 404 Not Found. |
+| **E05** | Request Body JSON sai cú pháp (Malformed) | `POST /api/v1/sinh-vien` | **400** | **400** | Bắt lỗi `SyntaxError` của parser, trả 400 Bad Request. |
+| **E06** | Thử nghiệm lỗi 500 ở môi trường Test | `GET /api/v1/sinh-vien/test-500` | **500** | **500** | Trả về 500 Internal Server Error có cấu trúc JSON chuẩn. |
+| **E07** | Kiểm tra che giấu stack trace khi production | `NODE_ENV=production` | **500** | **500** | Thông điệp masked: "Lỗi hệ thống, vui lòng thử lại sau", không lộ stack. |
+| **E08** | Thao tác POST sinh viên không có JWT | `POST /api/v1/sinh-vien` | **401** | **401** | `isAuth` chặn trước khi vào logic nghiệp vụ, trả 401 Unauthorized. |
+| **E09** | Thao tác POST sinh viên với Token Student | `POST /api/v1/sinh-vien` | **403** | **403** | `isAdmin` chặn với 403 Forbidden: "Yêu cầu quyền Quản trị viên (admin)". |
+| **E10** | Thao tác DELETE sinh viên với Token Student | `DELETE /api/v1/sinh-vien/SV001` | **403** | **403** | `isAdmin` chặn với 403 Forbidden, bảo toàn dữ liệu trong SQL Server. |
+
+### 🔹 Nhóm X: Truy vấn Nâng cao & Mở rộng (Advanced Queries - X01 đến X04)
+
+| Mã Ca | Tên Phương Pháp | Tuyến đường (Endpoint) | Kỹ thuật Thực thi | Hiện trạng phản hồi |
+|:---:|---|---|---|---|
+| **X01** | Thống kê Raw SQL Query | `GET /api/v1/sinh-vien/thong-ke?method=raw` | `sequelize.query(...)` với `QueryTypes.SELECT` | Trả về danh sách lớp và số lượng sinh viên tương ứng. |
+| **X02** | Thống kê Sequelize Group/Count | `GET /api/v1/sinh-vien/thong-ke?method=sequelize` | `SinhVien.findAll` với `GROUP BY maLop` | Gom nhóm theo mã lớp và đếm số lượng sinh viên chính xác. |
+| **X03** | Thống kê Stored Procedure | `GET /api/v1/sinh-vien/thong-ke?method=sp` | `EXEC dbo.sp_ThongKeSinhVienTheoLop` | Gọi thủ tục biên dịch sẵn trên SQL Server, trả về kết quả chuẩn. |
+| **X04** | Nối bảng Eager Loading (JOIN) | `GET /api/v1/sinh-vien/kem-lop` | `SinhVien.findAll` với `include: [Lop]` | Trả về thông tin sinh viên kèm theo đối tượng lớp tương ứng (`tenLop`). |
+

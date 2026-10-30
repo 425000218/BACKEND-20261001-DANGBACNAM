@@ -3,6 +3,7 @@
 > **Hệ thống RESTful API Quản lý Sinh viên & Phân quyền Học vụ**  
 > **Chương 06: Authentication & Authorization (JWT · Middleware · Phân quyền RBAC)**  
 > **Chương 07: Upload Hình Ảnh & Kết Nối Frontend – Backend (Multer · Vite · React · Axios · CORS · JWT)**  
+> **Chương 08: Truy Vấn Nâng Cao & Phân Trang - Xử Lý Lỗi Tập Trung (Sequelize · SQL Server · Express 5 · React)**  
 > **Công nghệ:** Node.js (v20+) · Express 5 · TypeScript · SQL Server · Sequelize ORM · JWT · Multer · React 19 · Vite · Axios · Swagger OpenAPI 3.0
 
 ---
@@ -426,3 +427,9 @@ Tất cả báo cáo chi tiết phục vụ việc bảo vệ và chấm thi đ�
    - Bảng tổng hợp chi tiết kết quả 24 ca test A01–A12, B01–B12 kèm mã phản hồi thực tế và ghi chú an toàn.
 4. [`postman/Chuong06-Auth-RBAC.postman_collection.json`](file:///d:/BACKEND-20261001-DANGBACNAM/postman/Chuong06-Auth-RBAC.postman_collection.json):
    - File JSON chứa toàn bộ 24 request Postman đã cấu hình sẵn kịch bản test.
+5. [`docs/Bao_Cao_Thuc_Hanh_Chuong_08.pdf`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Bao_Cao_Thuc_Hanh_Chuong_08.pdf):
+   - Báo cáo chính thức Chương 08: Phân trang & Tìm kiếm, Xử lý lỗi tập trung `AppError`, Truy vấn mở rộng (Raw Query, Stored Procedure, Group/Count, JOIN) kèm đầy đủ ảnh chụp Postman và Frontend UI.
+6. [`docs/Chuong08-Pagination-Error.postman_collection.json`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Chuong08-Pagination-Error.postman_collection.json):
+   - File Postman Collection đầy đủ 27 request kiểm thử phân trang và xử lý lỗi cho Chương 08.
+7. [`docs/bai_thuc_hanh_chuong_08.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/bai_thuc_hanh_chuong_08.md):
+   - Bản số hóa và hướng dẫn triển khai chi tiết Chương 08 cùng 4 câu hỏi bảo vệ bài thực hành.

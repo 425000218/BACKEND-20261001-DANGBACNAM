@@ -8,6 +8,13 @@ export interface ISinhVien {
   maLop: string;
 }
 
+export interface IPaginationMeta {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+}
+
 interface SinhVienTableProps {
   token: string | null;
   userRole?: string | null;
@@ -20,16 +27,36 @@ export const SinhVienTable: React.FC<SinhVienTableProps> = ({ token, userRole })
   const [deletingMaSV, setDeletingMaSV] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // Trạng thái Tìm kiếm & Phân trang tại SQL Server (Chương 08)
+  const [page, setPage] = useState<number>(1);
+  const [limit, setLimit] = useState<number>(5);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [activeSearch, setActiveSearch] = useState<string>('');
+  const [pagination, setPagination] = useState<IPaginationMeta | null>(null);
+
   const fetchDanhSach = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Hợp đồng API: GET /api/v1/sinh-vien trả { success: true, message: "...", data: [...] }
-      const res = await apiClient.get('/api/v1/sinh-vien');
+      // Hợp đồng API Chương 08:
+      // GET /api/v1/sinh-vien?page=X&limit=Y&search=Z
+      // Trả: { success: true, message: "...", data: [...], pagination: { page, limit, totalItems, totalPages } }
+      const res = await apiClient.get('/api/v1/sinh-vien', {
+        params: {
+          page,
+          limit,
+          search: activeSearch || undefined,
+        },
+      });
+
       if (res.data && Array.isArray(res.data.data)) {
         setDanhSach(res.data.data);
       } else {
         setDanhSach([]);
+      }
+
+      if (res.data && res.data.pagination) {
+        setPagination(res.data.pagination);
       }
     } catch (err: any) {
       console.error('Lỗi khi tải danh sách sinh viên:', err);
@@ -43,11 +70,37 @@ export const SinhVienTable: React.FC<SinhVienTableProps> = ({ token, userRole })
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, limit, activeSearch]);
 
   useEffect(() => {
     fetchDanhSach();
   }, [fetchDanhSach]);
+
+  // Xử lý gửi tìm kiếm: reset về trang 1 để không bị rỗng
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPage(1);
+    setActiveSearch(searchTerm.trim());
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm('');
+    setActiveSearch('');
+    setPage(1);
+  };
+
+  // Chuyển trang (Trước / Sau)
+  const handlePrevPage = () => {
+    if (page > 1) {
+      setPage(prev => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination && page < pagination.totalPages) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   // Xử lý Xóa sinh viên (Chỉ Admin mới có quyền)
   const handleDelete = async (maSV: string) => {
@@ -86,11 +139,13 @@ export const SinhVienTable: React.FC<SinhVienTableProps> = ({ token, userRole })
   };
 
   const isAdmin = userRole === 'admin';
+  const totalPages = pagination?.totalPages ?? 1;
+  const totalItems = pagination?.totalItems ?? 0;
 
   return (
     <div className="card shadow-sm mb-4">
       <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">📋 Danh Sách Sinh Viên (Gọi API Thật từ SQL Server)</h5>
+        <h5 className="mb-0">📋 Quản Lý Sinh Viên (Phân Trang & Tìm Kiếm SQL Server)</h5>
         <button
           onClick={fetchDanhSach}
           disabled={loading}
@@ -102,6 +157,68 @@ export const SinhVienTable: React.FC<SinhVienTableProps> = ({ token, userRole })
       </div>
 
       <div className="card-body">
+        {/* Thanh tìm kiếm theo Họ Tên (Chương 08) */}
+        <form onSubmit={handleSearchSubmit} className="row g-2 mb-3">
+          <div className="col-sm-7 col-md-8">
+            <div className="input-group">
+              <span className="input-group-text bg-white">🔍</span>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Tìm kiếm theo họ tên (ví dụ: Anh, Mai, Nam)..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                maxLength={80}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={handleClearSearch}
+                  title="Xóa tìm kiếm"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="col-sm-3 col-md-2">
+            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+              Tìm kiếm
+            </button>
+          </div>
+          <div className="col-sm-2 col-md-2">
+            <select
+              className="form-select"
+              value={limit}
+              onChange={e => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              title="Số bản ghi mỗi trang"
+            >
+              <option value={2}>2 / trang</option>
+              <option value={5}>5 / trang</option>
+              <option value={10}>10 / trang</option>
+              <option value={20}>20 / trang</option>
+            </select>
+          </div>
+        </form>
+
+        {activeSearch && (
+          <div className="mb-2">
+            <span className="badge bg-info text-dark">
+              Đang lọc theo tên: "{activeSearch}"
+            </span>
+            <button
+              onClick={handleClearSearch}
+              className="btn btn-link btn-sm text-decoration-none ms-1 p-0"
+            >
+              (Bỏ lọc)
+            </button>
+          </div>
+        )}
+
         {/* Thông báo thao tác */}
         {actionMessage && (
           <div className={`alert ${actionMessage.type === 'success' ? 'alert-success' : 'alert-danger'} alert-dismissible fade show`} role="alert">
@@ -116,7 +233,7 @@ export const SinhVienTable: React.FC<SinhVienTableProps> = ({ token, userRole })
             <div className="spinner-border text-primary" role="status">
               <span className="visually-hidden">Đang tải...</span>
             </div>
-            <p className="mt-2 text-muted">Đang kết nối Backend và truy vấn SQL Server...</p>
+            <p className="mt-2 text-muted">Đang truy vấn phân trang tại SQL Server...</p>
           </div>
         )}
 
@@ -134,7 +251,9 @@ export const SinhVienTable: React.FC<SinhVienTableProps> = ({ token, userRole })
         {/* Trạng thái Rỗng */}
         {!loading && !error && danhSach.length === 0 && (
           <div className="alert alert-warning text-center my-3" role="alert">
-            <p className="mb-0">📭 Hiện tại chưa có sinh viên nào trong Cơ sở dữ liệu.</p>
+            <p className="mb-0">
+              📭 {activeSearch ? `Không tìm thấy sinh viên nào phù hợp với từ khóa "${activeSearch}".` : 'Hiện tại chưa có sinh viên nào trong CSDL.'}
+            </p>
           </div>
         )}
 
@@ -174,14 +293,47 @@ export const SinhVienTable: React.FC<SinhVienTableProps> = ({ token, userRole })
                 ))}
               </tbody>
             </table>
-            <div className="text-muted small mt-2">
-              Tổng số sinh viên: <strong>{danhSach.length}</strong>
+          </div>
+        )}
+
+        {/* Điều khiển Phân trang (Pagination Controls - Phân trang thật tại Database) */}
+        {!loading && !error && totalItems > 0 && (
+          <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 pt-2 border-top">
+            <div className="text-muted small">
+              Hiển thị trang <strong>{page}</strong> / <strong>{totalPages}</strong> (Tổng số: <strong>{totalItems}</strong> sinh viên)
               {isAdmin ? (
-                <span className="badge bg-success ms-2">Quyền Admin: Cho phép xóa sinh viên</span>
+                <span className="badge bg-success ms-2">Quyền Admin</span>
               ) : (
-                <span className="badge bg-secondary ms-2">Chế độ xem Public / Student</span>
+                <span className="badge bg-secondary ms-2">Chế độ Public</span>
               )}
             </div>
+            <nav aria-label="Phân trang sinh viên">
+              <ul className="pagination pagination-sm mb-0">
+                <li className={`page-item ${page <= 1 ? 'disabled' : ''}`}>
+                  <button
+                    className="page-link"
+                    onClick={handlePrevPage}
+                    disabled={page <= 1}
+                  >
+                    ◀ Trước
+                  </button>
+                </li>
+                <li className="page-item active">
+                  <span className="page-link">
+                    Trang {page} / {totalPages}
+                  </span>
+                </li>
+                <li className={`page-item ${page >= totalPages ? 'disabled' : ''}`}>
+                  <button
+                    className="page-link"
+                    onClick={handleNextPage}
+                    disabled={page >= totalPages}
+                  >
+                    Sau ▶
+                  </button>
+                </li>
+              </ul>
+            </nav>
           </div>
         )}
       </div>
