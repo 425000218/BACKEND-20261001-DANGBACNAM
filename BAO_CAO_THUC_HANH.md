@@ -449,5 +449,59 @@ Toàn bộ tài liệu chính thức của Chương 08 được lưu trữ tại
 - **Đặc tả OpenAPI 3.0**: [`docs/openapi.yaml`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/openapi.yaml)
 - **Ảnh chụp minh chứng kiểm thử**: Thư mục [`docs/screenshots/`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/) (bao gồm ảnh Postman, Swagger UI, và Frontend React).
 
+---
+
+# PHẦN V: BÁO CÁO THỰC HÀNH CHƯƠNG 09 (BUỔI 12 - 14)
+## KIỂM THỬ TỰ ĐỘNG, BẢO MẬT API & ĐÓNG GÓI TRIỂN KHAI DOCKER
+
+### 1. Kiến trúc & Mục tiêu Kỹ thuật
+
+Trong Chương 09, hệ thống được chuẩn hóa toàn diện theo 3 trụ cột kỹ thuật:
+
+1. **Buổi 12: Kiểm thử tự động (Automated Testing)**
+   - **Tách kiến trúc `src/app.ts` và `src/server.ts`**: Tách phiên bản Express Application để cho phép Supertest kiểm thử in-memory mà không xung đột cổng TCP 5000 khi dev server đang chạy.
+   - **Cấu hình Jest trong môi trường ESM**: Sử dụng cờ `--experimental-vm-modules`, `ts-jest` và file cấu hình `tsconfig.spec.json` cách ly để chạy kiểm thử TypeScript NodeNext.
+   - **Unit Testing (Jest)**: Kiểm thử logic đăng nhập cô lập với mock `User.findOne` và `bcrypt.compare` (T01–T05) cùng mở rộng tính toán giỏ hàng (C01–C05).
+   - **API Integration Testing (Supertest)**: Kiểm thử các luồng HTTP API xác thực, đăng nhập và bảo vệ hồ sơ (A01–A07).
+
+2. **Buổi 13: Bảo mật API & Tối ưu hóa Truy vấn SQL Server**
+   - **Rate Limiting (`express-rate-limit`)**: Cấu hình `loginLimiter` (5 request / 60 giây) áp dụng riêng cho tuyến đường nhạy cảm `POST /api/auth/login`, trả về HTTP 429 Too Many Requests khi vượt hạn mức.
+   - **Helmet Security Headers**: Cấu hình các header bảo vệ chuẩn OWASP (`X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, ẩn `X-Powered-By`).
+   - **Đo lường & Tối ưu hóa SQL Server**: Phân tích chi tiết với `SET STATISTICS IO ON; SET STATISTICS TIME ON;` so sánh quét toàn bảng với truy vấn chỉ định cột kết hợp phân trang `ORDER BY ... OFFSET ... FETCH NEXT`.
+   - **Tài liệu An ninh**: Lập báo cáo [`docs/security-report.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/security-report.md) rà soát 6 lỗ hổng bảo mật tiêu biểu và phương án xử lý.
+
+3. **Buổi 14: Đóng gói Docker & Triển khai Bền vững**
+   - **Multi-stage Dockerfile**: Stage 1 (`build`) biên dịch TypeScript với pnpm; Stage 2 (`runtime`) chỉ chứa file dist và production dependencies trên image `node:22-bookworm-slim`.
+   - **Docker Compose đa dịch vụ (`compose.yaml`)**: Khai báo 2 dịch vụ liên kết mạng `backend` và `sqlserver`.
+   - **Healthcheck & Khởi động có thứ tự**: SQL Server thực hiện healthcheck với `sqlcmd`, Backend cấu hình `depends_on` với điều kiện `service_healthy`.
+   - **Tính bền vững dữ liệu (Data Persistence)**: Sử dụng Named Volumes (`sqlserver-data`, `uploads-data`) để bảo toàn CSDL và file avatar tải lên sau chu kỳ `docker compose down`.
+
+---
+
+### 2. Bảng Tổng hợp Kịch bản Kiểm thử Chương 09
+
+| Nhóm Kiểm Thử | Số Lượng Ca | Phạm Vi Kiểm Tra | Kết Quả Kỹ Thuật |
+|---|:---:|---|:---:|
+| **Unit Test Login (T01–T05)** | 5 | Tài khoản đúng/sai mật khẩu, không tồn tại, thiếu dữ liệu, lỗi CSDL (mocked) | 5 / 5 PASS |
+| **Unit Test Giỏ hàng (C01–C05)** | 5 | Giỏ rỗng, tính tổng, giảm giá voucher, validation âm / sai định dạng | 5 / 5 PASS |
+| **API Test Supertest (A01–A07)** | 7 | HTTP API Login, Profile không token, có token, lỗi giả lập 500 | 7 / 7 PASS |
+| **Security & Rate Limit (S01–S07)** | 7 | 5 request cho phép, request thứ 6 nhận HTTP 429, Helmet headers, RBAC | 7 / 7 PASS |
+| **Docker Configuration (D01–D09)** | 9 | Multi-stage, .dockerignore, compose, network discovery, healthcheck, volumes | 9 / 9 PASS |
+| **Hồi quy hệ thống (R01–R05)** | 5 | Auth C06, Upload C07, Pagination C08, Centralized Error C08, Swagger Docs | 5 / 5 PASS |
+
+---
+
+### 3. Hồ sơ Bàn giao & Tài liệu Đính kèm Chương 09
+
+Toàn bộ tài liệu kỹ thuật chính thức của Chương 09 được lưu trữ tại thư mục `docs/`:
+- **Báo cáo PDF chính thức**: [`docs/Bao_Cao_Thuc_Hanh_Chuong_09.pdf`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Bao_Cao_Thuc_Hanh_Chuong_09.pdf) và bản sao chép thư mục gốc [`Bao_Cao_Thuc_Hanh_Chuong_09.pdf`](file:///d:/BACKEND-20261001-DANGBACNAM/Bao_Cao_Thuc_Hanh_Chuong_09.pdf)
+- **Bản Word tài liệu**: [`docs/Bao_Cao_Thuc_Hanh_Chuong_09.docx`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Bao_Cao_Thuc_Hanh_Chuong_09.docx)
+- **Postman Collection chính thức**: [`docs/Chuong09-Test-Security-Docker.postman_collection.json`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Chuong09-Test-Security-Docker.postman_collection.json) (và bản sao chép tại `postman/`)
+- **Tài liệu Giáo trình Số hóa**: [`docs/bai_thuc_hanh_chuong_09.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/bai_thuc_hanh_chuong_09.md)
+- **Báo cáo Đánh giá An ninh**: [`docs/security-report.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/security-report.md)
+- **Báo cáo Tối ưu hóa Truy vấn SQL Server**: [`docs/sql-optimization.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/sql-optimization.md)
+- **Báo cáo Triển khai Docker**: [`docs/deployment-report.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/deployment-report.md)
+- **Bộ 8 ảnh chụp minh chứng kiểm thử**: Thư mục [`docs/screenshots/`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/screenshots/) (ảnh chụp Rate Limiting, Helmet Headers, Supertest API, Jest Unit Tests, Coverage, SSMS SQL Statistics, Docker Architecture).
+
 
 

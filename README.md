@@ -4,7 +4,8 @@
 > **Chương 06: Authentication & Authorization (JWT · Middleware · Phân quyền RBAC)**  
 > **Chương 07: Upload Hình Ảnh & Kết Nối Frontend – Backend (Multer · Vite · React · Axios · CORS · JWT)**  
 > **Chương 08: Truy Vấn Nâng Cao & Phân Trang - Xử Lý Lỗi Tập Trung (Sequelize · SQL Server · Express 5 · React)**  
-> **Công nghệ:** Node.js (v20+) · Express 5 · TypeScript · SQL Server · Sequelize ORM · JWT · Multer · React 19 · Vite · Axios · Swagger OpenAPI 3.0
+> **Chương 09: Kiểm Thử Tự Động, Bảo Mật API & Đóng Gói Triển Khai Docker (Jest · Supertest · Helmet · Rate Limit · SQL Optimization · Docker Compose)**  
+> **Công nghệ:** Node.js (v20+) · Express 5 · TypeScript · SQL Server · Sequelize ORM · JWT · Multer · React 19 · Vite · Axios · Jest · Supertest · Helmet · Rate Limit · Docker · Docker Compose · Swagger OpenAPI 3.0
 
 ---
 
@@ -433,3 +434,47 @@ Tất cả báo cáo chi tiết phục vụ việc bảo vệ và chấm thi đ�
    - File Postman Collection đầy đủ 27 request kiểm thử phân trang và xử lý lỗi cho Chương 08.
 7. [`docs/bai_thuc_hanh_chuong_08.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/bai_thuc_hanh_chuong_08.md):
    - Bản số hóa và hướng dẫn triển khai chi tiết Chương 08 cùng 4 câu hỏi bảo vệ bài thực hành.
+8. [`docs/Bao_Cao_Thuc_Hanh_Chuong_09.pdf`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Bao_Cao_Thuc_Hanh_Chuong_09.pdf):
+   - Báo cáo chính thức Chương 09: Kiểm thử tự động (Jest, Supertest), Bảo mật API (Rate Limiting, Helmet, Security Review), Tối ưu hóa truy vấn SQL Server (SET STATISTICS IO/TIME, OFFSET...FETCH NEXT), Đóng gói ứng dụng với Docker & Docker Compose đa dịch vụ kèm ảnh chụp minh chứng thực tế.
+9. [`docs/Chuong09-Test-Security-Docker.postman_collection.json`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/Chuong09-Test-Security-Docker.postman_collection.json):
+   - Bộ sưu tập Postman Collection đầy đủ kịch bản kiểm thử API Authentication, Profile, Rate Limiting (HTTP 429), Helmet Security Headers, RBAC Authorization và Hồi quy hệ thống.
+10. [`docs/bai_thuc_hanh_chuong_09.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/bai_thuc_hanh_chuong_09.md):
+    - Bản số hóa Markdown chi tiết toàn bộ giáo trình thực hành Chương 09 (Buổi 12, Buổi 13, Buổi 14) cùng đối chiếu mã nguồn và câu hỏi bảo vệ.
+11. [`docs/security-report.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/security-report.md) & [`docs/sql-optimization.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/sql-optimization.md):
+    - Báo cáo rà soát 6 hạng mục an ninh bảo mật và bảng đối chiếu hiệu năng truy vấn SQL Server thực tế trên SQL Server 2022.
+12. [`docs/deployment-report.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/deployment-report.md):
+    - Tài liệu kiến trúc triển khai Docker Compose, phân tích mạng nội bộ, cơ chế kiểm tra sức khỏe CSDL và xác minh tính bền vững dữ liệu qua Named Volumes.
+
+---
+
+## 9. Hướng dẫn chạy kiểm thử Chương 09
+
+### 9.1. Chạy Unit Test & API Test tự động bằng Jest (Buổi 12)
+```bash
+# Chạy toàn bộ 18 test cases (Smoke test, Unit tests Login & Cart, Supertest API tests)
+pnpm test
+
+# Chạy kiểm thử kèm báo cáo độ phủ mã nguồn (Code Coverage)
+pnpm test:coverage
+```
+
+### 9.2. Chạy kiểm thử An ninh & Rate Limiting trực tiếp (Buổi 13)
+```bash
+# Kiểm tra HTTP 429 Too Many Requests, Helmet Headers, RBAC và hồi quy
+pnpm test:c9
+```
+
+### 9.3. Đo lường hiệu năng SQL Server
+```bash
+# Đo lường và in ra số liệu STATISTICS IO và STATISTICS TIME từ SQL Server
+npx tsx src/scripts/measure-sql.ts
+```
+
+### 9.4. Sinh lại báo cáo Word, PDF và chụp ảnh tự động
+```bash
+# Sinh lại 8 ảnh chụp minh chứng sắc nét
+pnpm screenshots:c9
+
+# Sinh file Word và xuất file PDF chính thức
+pnpm report:pdf:c9
+```

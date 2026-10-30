@@ -1,0 +1,282 @@
+{
+  "info": {
+    "_postman_id": "c09-security-testing-docker-2026",
+    "name": "Chương 09: Kiểm Thử, Bảo Mật & Triển Khai Hệ Thống Backend",
+    "description": "Bộ sưu tập kiểm thử toàn diện Chương 09 (Testing, Security, Docker, Regression) cho Hệ thống Quản lý Sinh viên Node.js Express 5 & SQL Server.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "adminEmail",
+      "value": "admin@example.com",
+      "type": "string"
+    },
+    {
+      "key": "adminPassword",
+      "value": "Admin@123",
+      "type": "string"
+    },
+    {
+      "key": "studentEmail",
+      "value": "an.lab@example.com",
+      "type": "string"
+    },
+    {
+      "key": "studentPassword",
+      "value": "SinhVien@123",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01. Security & Rate Limiting (S01 - S07)",
+      "item": [
+        {
+          "name": "S01 - Login hợp lệ (Lần 1)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "S01 - Login (Lần 2 trong 60s)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "S01 - Login (Lần 3 trong 60s)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "S01 - Login (Lần 4 trong 60s)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "S01 - Login (Lần 5 trong 60s)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "S02 - Login lần 6 (Vượt Rate Limit -> Kỳ vọng 429)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "S04 - GET Danh Sách Sinh Viên (Không bị Rate Limit)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/sinh-vien?page=1&limit=2", "host": ["{{baseUrl}}"], "path": ["api", "v1", "sinh-vien"], "query": [{ "key": "page", "value": "1" }, { "key": "limit", "value": "2" }] }
+          }
+        },
+        {
+          "name": "S05 - Kiểm tra Helmet Security Headers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/", "host": ["{{baseUrl}}"], "path": [""] }
+          }
+        },
+        {
+          "name": "S06 - Login sai mật khẩu trước hạn mức (401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"SaiMatKhau@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "S07 - Student gọi DELETE SinhVien (Chặn 403 Forbidden)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{studentToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/v1/sinh-vien/SV001", "host": ["{{baseUrl}}"], "path": ["api", "v1", "sinh-vien", "SV001"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "02. API Testing Supertest Matching (A01 - A07)",
+      "item": [
+        {
+          "name": "A01 - POST /api/auth/login Thành Công (200 OK)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "A02 - POST /api/auth/login Sai Mật Khẩu (401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"SaiPassword\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "A03 - POST /api/auth/login Email Không Tồn Tại (401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"khongtontai@example.com\",\n  \"password\": \"MatKhau@123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "A04 - POST /api/auth/login Thiếu Password (400)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "A05 - GET /api/auth/profile Không Gửi Token (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/profile", "host": ["{{baseUrl}}"], "path": ["api", "auth", "profile"] }
+          }
+        },
+        {
+          "name": "A06 - GET /api/auth/profile Có Bearer Token Hợp Lệ (200)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/profile", "host": ["{{baseUrl}}"], "path": ["api", "auth", "profile"] }
+          }
+        },
+        {
+          "name": "A07 - GET /api/v1/sinh-vien/test-500 (Lỗi Mô Phỏng 500)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/sinh-vien/test-500", "host": ["{{baseUrl}}"], "path": ["api", "v1", "sinh-vien", "test-500"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Regression Testing (R01 - R05)",
+      "item": [
+        {
+          "name": "R01 - CRUD SinhVien: Xem Chi Tiết SV001 (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/sinh-vien/SV001", "host": ["{{baseUrl}}"], "path": ["api", "v1", "sinh-vien", "SV001"] }
+          }
+        },
+        {
+          "name": "R02 - Pagination & Search: Tìm Kiếm 'Anh' Trang 1 Limit 2 (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/sinh-vien?search=Anh&page=1&limit=2", "host": ["{{baseUrl}}"], "path": ["api", "v1", "sinh-vien"], "query": [{ "key": "search", "value": "Anh" }, { "key": "page", "value": "1" }, { "key": "limit", "value": "2" }] }
+          }
+        },
+        {
+          "name": "R03 - Global Error: Tra cứu SV999 Không Tồn Tại (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/v1/sinh-vien/SV999", "host": ["{{baseUrl}}"], "path": ["api", "v1", "sinh-vien", "SV999"] }
+          }
+        },
+        {
+          "name": "R04 - Phục Vụ Tĩnh Uploads: Xem File Avatar (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/uploads/44751e42-f04a-4a89-8e68-29e5f9fa2d63.png", "host": ["{{baseUrl}}"], "path": ["uploads", "44751e42-f04a-4a89-8e68-29e5f9fa2d63.png"] }
+          }
+        },
+        {
+          "name": "R05 - Swagger UI Documentation (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api-docs/", "host": ["{{baseUrl}}"], "path": ["api-docs", ""] }
+          }
+        }
+      ]
+    }
+  ]
+}

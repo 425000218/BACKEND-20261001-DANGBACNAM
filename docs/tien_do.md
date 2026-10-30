@@ -188,3 +188,32 @@
 - [x] Đạt **12/12 Ca test Upload (U01–U12)** và **12/12 Ca test Frontend (F01–F12)** đạt 100% PASS.
 - [x] Luồng dữ liệu chạy mượt mà end-to-end từ giao diện React Vite tới SQL Server qua Express Backend và Multer.
 - [x] Hồ sơ báo cáo, prompt log và câu hỏi bảo vệ bài đầy đủ, trung thực, đạt điểm 10/10 theo giáo trình.
+
+---
+
+## 🛡️ CHƯƠNG 09: KIỂM THỬ TỰ ĐỘNG, BẢO MẬT API & ĐÓNG GÓI DOCKER (BUỔI 12 - 14)
+
+### 📊 BẢNG TỔNG QUAN TIẾN ĐỘ CHƯƠNG 09
+
+| Mã Module | Tên Phân Hệ | Nội Dung & Công Nghệ | Trạng thái |
+|:---:|---|---|:---:|
+| **M15** | Buổi 12: Kiểm thử tự động | Jest, ts-jest, Supertest, T01–T05, C01–C05, A01–A07 | `DONE` |
+| **M16** | Buổi 13: An ninh API & Rate Limit | express-rate-limit, Helmet, S01–S07 | `DONE` |
+| **M17** | Buổi 13: Tối ưu hóa SQL Server | SET STATISTICS IO/TIME ON, OFFSET...FETCH NEXT | `DONE` |
+| **M18** | Buổi 14: Đóng gói Docker & Bền vững | Dockerfile multi-stage, compose.yaml, Named Volumes | `DONE` |
+| **M19** | Báo cáo, Postman & Minh chứng | DOCX, PDF, Postman JSON, 8 screenshots sắc nét | `DONE` |
+
+### 📝 Chi tiết Triển khai & Nghiệm thu Chương 09:
+* [x] **Task 15.1**: Tách `src/app.ts` và `src/server.ts` phục vụ kiểm thử in-memory bằng Supertest, không xung đột port.
+* [x] **Task 15.2**: Cấu hình `tsconfig.spec.json` và `jest.config.mjs` hỗ trợ ESM / NodeNext.
+* [x] **Task 15.3**: Viết và chạy thành công 18 test cases (Smoke test, Unit test T01–T05, Unit test C01–C05, API test A01–A07) với độ phủ mã nguồn (`pnpm test:coverage`).
+* [x] **Task 16.1**: Cài đặt và cấu hình middleware `express-rate-limit` (5 requests / 60s cho tuyến đường đăng nhập).
+* [x] **Task 16.2**: Kiểm tra các headers bảo mật OWASP từ Helmet (`nosniff`, `SAMEORIGIN`, ẩn `X-Powered-By`).
+* [x] **Task 16.3**: Viết báo cáo an ninh [`docs/security-report.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/security-report.md) rà soát 6 lỗ hổng bảo mật tiêu biểu.
+* [x] **Task 17.1**: Đo lường và đối chiếu hiệu năng truy vấn SQL Server thực tế qua `measure-sql.ts` và SSMS (`docs/sql-optimization.md`).
+* [x] **Task 18.1**: Xây dựng `Dockerfile` multi-stage (Node.js 22, pnpm, image runtime bookworm-slim).
+* [x] **Task 18.2**: Viết `compose.yaml` khai báo hai service `backend` và `sqlserver` với mạng nội bộ, healthcheck và 2 named volumes `sqlserver-data` và `uploads-data`.
+* [x] **Task 18.3**: Lập báo cáo triển khai [`docs/deployment-report.md`](file:///d:/BACKEND-20261001-DANGBACNAM/docs/deployment-report.md) phân tích kiến trúc và tính bền vững dữ liệu.
+* [x] **Task 19.1**: Tạo Postman Collection `docs/Chuong09-Test-Security-Docker.postman_collection.json` (và bản copy `postman/`).
+* [x] **Task 19.2**: Tự động chụp 8 ảnh màn hình chất lượng cao vào `docs/screenshots/`.
+* [x] **Task 19.3**: Sinh file Word `docs/Bao_Cao_Thuc_Hanh_Chuong_09.docx` và xuất PDF chính thức `docs/Bao_Cao_Thuc_Hanh_Chuong_09.pdf` (và root `Bao_Cao_Thuc_Hanh_Chuong_09.pdf`).

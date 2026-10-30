@@ -161,3 +161,74 @@ Công cụ kiểm thử: **Automated TypeScript Test Runner (`pnpm run test:24`)
 | **X03** | Thống kê Stored Procedure | `GET /api/v1/sinh-vien/thong-ke?method=sp` | `EXEC dbo.sp_ThongKeSinhVienTheoLop` | Gọi thủ tục biên dịch sẵn trên SQL Server, trả về kết quả chuẩn. |
 | **X04** | Nối bảng Eager Loading (JOIN) | `GET /api/v1/sinh-vien/kem-lop` | `SinhVien.findAll` với `include: [Lop]` | Trả về thông tin sinh viên kèm theo đối tượng lớp tương ứng (`tenLop`). |
 
+---
+
+## 🛡️ 4. CHƯƠNG 09: KIỂM THỬ TỰ ĐỘNG, BẢO MẬT API & ĐÓNG GÓI DOCKER
+
+Thời điểm thực hiện: **2026-10-30**  
+Môi trường thực thi: **Node.js v22 (ESM/NodeNext), Jest 30, Supertest 7, express-rate-limit 8, Helmet 8, Microsoft SQL Server 2022, Docker Compose**  
+Bộ kiểm thử thực thi: `pnpm test` (Jest ESM), `pnpm test:c9` (Live Integration & Regression)
+
+### 🔹 4.1. Nhóm T & C: Unit Test (Jest & ts-jest)
+
+| Mã Ca | Tên Ca Kiểm Thử | File Kiểm Thử | Kỹ Thuật Mock / Logic | Kết Quả Thực Tế |
+|:---:|---|---|---|:---:|
+| **T01** | Đăng nhập thành công với tài khoản và mật khẩu đúng | `tests/unit/login.test.ts` | Mock `User.findOne` & `bcrypt.compare` -> true | PASS |
+| **T02** | Đăng nhập sai mật khẩu -> ném ngoại lệ AppError 401 | `tests/unit/login.test.ts` | Mock `User.findOne` & `bcrypt.compare` -> false | PASS |
+| **T03** | Đăng nhập với email không tồn tại trong CSDL | `tests/unit/login.test.ts` | Mock `User.findOne` -> null | PASS |
+| **T04** | Request body thiếu email hoặc mật khẩu | `tests/unit/login.test.ts` | Kiểm tra tham số đầu vào -> AppError 400 | PASS |
+| **T05** | Database phát sinh lỗi kết nối khi truy vấn | `tests/unit/login.test.ts` | Mock `User.findOne` -> ném Error | PASS |
+| **C01** | Giỏ hàng rỗng -> Tổng tiền bằng 0 | `tests/unit/cart.test.ts` | Logic mở rộng tính giỏ hàng rỗng | PASS |
+| **C02** | Giỏ hàng nhiều sản phẩm, không giảm giá | `tests/unit/cart.test.ts` | Tính tổng giá * số lượng chính xác | PASS |
+| **C03** | Giỏ hàng áp dụng voucher hợp lệ (10%, 50%) | `tests/unit/cart.test.ts` | Khấu trừ theo tỷ lệ chiết khấu chính xác | PASS |
+| **C04** | Voucher có tỷ lệ không hợp lệ (< 0% hoặc > 100%) | `tests/unit/cart.test.ts` | Ném ngoại lệ validation lỗi dữ liệu | PASS |
+| **C05** | Dữ liệu sản phẩm có đơn giá/số lượng âm | `tests/unit/cart.test.ts` | Ném ngoại lệ validation dữ liệu âm | PASS |
+
+### 🔹 4.2. Nhóm A: API Integration Test (Supertest)
+
+| Mã Ca | Tên Ca Kiểm Thử | Endpoint | Tham Số / Header | HTTP Mã | Kết Quả Thực Tế |
+|:---:|---|---|---|:---:|:---:|
+| **A01** | Đăng nhập thành công trả về JWT | `POST /api/auth/login` | Body email & password hợp lệ | 200 OK | PASS |
+| **A02** | Đăng nhập sai mật khẩu bị từ chối | `POST /api/auth/login` | Password sai | 401 Unauthorized | PASS |
+| **A03** | Đăng nhập với email chưa đăng ký | `POST /api/auth/login` | Email không tồn tại | 401 Unauthorized | PASS |
+| **A04** | Request đăng nhập thiếu trường password | `POST /api/auth/login` | Body chỉ có email | 400 Bad Request | PASS |
+| **A05** | Xem hồ sơ nhưng không gửi Authorization | `GET /api/auth/profile` | Không có header Authorization | 401 Unauthorized | PASS |
+| **A06** | Xem hồ sơ với Bearer Token hợp lệ | `GET /api/auth/profile` | Header `Bearer <token>` | 200 OK | PASS |
+| **A07** | Bắt lỗi 500 giả lập không lộ stack trace | `GET /api/v1/sinh-vien/test-500` | Không có header | 500 Server Error | PASS |
+
+### 🔹 4.3. Nhóm S: API Security & Rate Limit (Helmet, Rate Limiter, RBAC)
+
+| Mã Ca | Tên Tình Huống Bảo Mật | Endpoint | Điều Kiện Kiểm Thử | Kết Quả Thực Tế |
+|:---:|---|---|---|:---:|
+| **S01** | Cho phép gửi 5 request login liên tiếp trong 60s | `POST /api/auth/login` | Request 1 đến 5 từ cùng 1 địa chỉ IP | HTTP 200 (Thành công) |
+| **S02** | Chặn brute-force tại request thứ 6 | `POST /api/auth/login` | Request 6 trong cùng cửa sổ 60s | HTTP 429 Too Many Requests |
+| **S03** | Reset hạn mức sau khi hết thời gian chờ 60 giây | `POST /api/auth/login` | Gửi request sau khi cửa sổ reset | HTTP 200 (Khôi phục) |
+| **S04** | Rate limiter chỉ áp dụng cho route đăng nhập nhạy cảm | `GET /api/v1/sinh-vien` | Gọi nhiều lần không bị chặn | HTTP 200 (Bình thường) |
+| **S05** | Kiểm tra các header bảo mật của Helmet | `ALL ENDPOINTS` | Inspect response headers | `x-content-type-options: nosniff`, `x-frame-options: SAMEORIGIN`, ẩn `x-powered-by` |
+| **S06** | Thông báo lỗi đăng nhập đồng nhất chống enumeration | `POST /api/auth/login` | Sai email hoặc sai mật khẩu | Cùng HTTP 401 và cùng message |
+| **S07** | Phân quyền RBAC chặn tài khoản student xóa dữ liệu | `DELETE /api/v1/sinh-vien/SV001` | Gửi Bearer token có role student | HTTP 403 Forbidden |
+
+### 🔹 4.4. Nhóm D: Đóng Gói Docker & Tính Bền Vững Dữ Liệu
+
+| Mã Ca | Tên Hạng Mục Kiểm Tra | Cấu Hình / Lệnh Thực Thi | Kết Quả Kiểm Tra |
+|:---:|---|---|---|
+| **D01** | Multi-stage build tối ưu kích thước image | `Dockerfile` (build với node:22-alpine, runtime với node:22-bookworm-slim) | Tách biệt node_modules dev và production |
+| **D02** | Khai báo tập tin loại trừ .dockerignore | `.dockerignore` | Loại trừ node_modules, dist, .git, .env khỏi context |
+| **D03** | Khai báo docker-compose đa dịch vụ | `compose.yaml` | Định nghĩa 2 service: `backend` và `sqlserver` |
+| **D04** | Phân giải Service Discovery mạng nội bộ | Network `app-network` | Backend kết nối SQL Server qua hostname `sqlserver:1433` |
+| **D05** | Cấu hình Healthcheck cho SQL Server | Service `sqlserver` | Dùng `/opt/mssql-tools18/bin/sqlcmd` kiểm tra trạng thái CSDL |
+| **D06** | Khai báo `depends_on` có điều kiện khởi động | Service `backend` | `condition: service_healthy` đảm bảo backend chạy sau khi DB sẵn sàng |
+| **D07** | Ánh xạ Named Volume lưu trữ dữ liệu bền vững | Volume `sqlserver-data` | Mount vào `/var/opt/mssql`, dữ liệu tồn tại sau `docker compose down` |
+| **D08** | Ánh xạ Volume lưu trữ thư mục uploads | Volume `uploads-data` | Mount vào `/app/uploads`, avatar người dùng không bị xóa mất |
+| **D09** | Tài liệu hóa triển khai hai phương án môi trường | `docs/deployment-report.md` | Hướng dẫn chi tiết Phương án A (local) và Phương án B (compose) |
+
+### 🔹 4.5. Nhóm R: Kiểm Thử Hồi Quy Toàn Hệ Thống
+
+| Mã Ca | Tên Ca Hồi Quy | Kịch Bản Kiểm Tra | Kết Quả Thực Tế |
+|:---:|---|---|:---:|
+| **R01** | Xác thực JWT và phân quyền (Chương 06) | Đăng nhập admin lấy token -> Truy cập API bảo vệ | PASS (HTTP 200) |
+| **R02** | Upload ảnh và kiểm tra avatar tĩnh (Chương 07) | Tải file ảnh đại diện và truy cập file qua URL tĩnh | PASS (HTTP 200) |
+| **R03** | Tìm kiếm kết hợp phân trang (Chương 08) | `GET /api/v1/sinh-vien?search=Anh&page=1&limit=2` | PASS (HTTP 200) |
+| **R04** | Xử lý lỗi tập trung và mã 404 (Chương 08) | `GET /api/v1/sinh-vien/SV999` | PASS (HTTP 404) |
+| **R05** | Swagger API Docs tương thích với kiến trúc mới | `GET /api-docs/` | PASS (HTTP 200) |
+

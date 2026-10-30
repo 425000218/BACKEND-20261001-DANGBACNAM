@@ -8,4 +8,6 @@ frontend/.env
 frontend/.env.local
 public/uploads/*
 !public/uploads/.gitkeep
+coverage/
+dist-test/
 
