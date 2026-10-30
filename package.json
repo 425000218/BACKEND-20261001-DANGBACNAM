@@ -15,7 +15,9 @@
     "test:frontend": "tsx src/scripts/run-frontend-12-tests.ts",
     "dev:frontend": "pnpm --dir frontend dev",
     "build:frontend": "pnpm --dir frontend build",
-    "report:pdf": "tsx src/scripts/generate-chapter6-pdf.ts"
+    "report:pdf": "tsx src/scripts/generate-chapter6-pdf.ts",
+    "report:pdf:c7": "tsx src/scripts/generate-chapter7-pdf.ts",
+    "screenshots:c7": "tsx src/scripts/generate-chapter7-screenshots.ts"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
